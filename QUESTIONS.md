@@ -147,7 +147,36 @@ I would add the required registration/invitation flow and adjust the
 authentication and user-management design.
 
 
+## Q9 — Company Admin vs Finance Admin responsibilities
 
+Who is the main administrator of a company: `COMPANY_ADMIN` or `FINANCE`?
+
+The requirements state that `COMPANY_ADMIN` can perform everything that a Finance Admin can do, plus manage users in their own company.
+
+Could you please clarify:
+
+1. Who creates the initial company?
+2. Who creates the first `COMPANY_ADMIN`?
+3. Can `COMPANY_ADMIN` create `FINANCE` users?
+4. Can `COMPANY_ADMIN` create `AGENT` accounts?
+5. Can `FINANCE` create `AGENT` accounts?
+6. Can a company have multiple `COMPANY_ADMIN` users?
+
+## Why it matters / what it blocks
+
+This affects the role hierarchy, authentication flow, authorization rules, and user-management functionality.
+
+## Current assumption
+
+I will assume `COMPANY_ADMIN` is the primary administrator of the company.
+
+`COMPANY_ADMIN` can manage users, including creating `FINANCE` and `AGENT` accounts.
+
+`FINANCE` can perform finance-related operations but cannot manage company users unless explicitly allowed.
+
+## If the answer is different
+
+I would adjust the role permissions and user-management flow accordingly.
 
 
 
