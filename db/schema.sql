@@ -1,4 +1,8 @@
 -- db/schema.sql — reconciled: TEXT ids throughout, to match the fixed seed data
+DROP TABLE IF EXISTS payout_line_items CASCADE;
+DROP TABLE IF EXISTS commission_product_overrides CASCADE;
+DROP TABLE IF EXISTS commission_tiers CASCADE;
+DROP TABLE IF EXISTS commission_rule_sets CASCADE;
 DROP TABLE IF EXISTS payout_runs CASCADE;
 DROP TABLE IF EXISTS bookings CASCADE;
 DROP TABLE IF EXISTS agents CASCADE;
@@ -64,4 +68,44 @@ CREATE TABLE payout_runs (
   period_end    DATE NOT NULL,
   status        TEXT NOT NULL DEFAULT 'DRAFT',
   created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE commission_rule_sets (
+  id             TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  company_id     TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  label          TEXT NOT NULL,
+  effective_from DATE NOT NULL,
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (company_id, effective_from)
+);
+
+CREATE TABLE commission_tiers (
+  id           TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  rule_set_id  TEXT NOT NULL REFERENCES commission_rule_sets(id) ON DELETE CASCADE,
+  min_volume   NUMERIC(14, 2) NOT NULL,
+  max_volume   NUMERIC(14, 2),           -- NULL = open-ended top tier
+  rate         NUMERIC(6, 4) NOT NULL,    -- e.g. 0.0500 = 5%
+  CONSTRAINT tiers_range_valid CHECK (max_volume IS NULL OR max_volume > min_volume)
+);
+
+CREATE TABLE commission_product_overrides (
+  id           TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  rule_set_id  TEXT NOT NULL REFERENCES commission_rule_sets(id) ON DELETE CASCADE,
+  product_code TEXT NOT NULL,
+  rate         NUMERIC(6, 4) NOT NULL,
+  UNIQUE (rule_set_id, product_code)
+);
+
+CREATE INDEX rule_sets_company_effective_idx ON commission_rule_sets (company_id, effective_from);
+
+CREATE TABLE payout_line_items (
+  id                 TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  run_id             TEXT NOT NULL REFERENCES payout_runs(id) ON DELETE CASCADE,
+  agent_id           TEXT NOT NULL REFERENCES agents(id),
+  agent_code         TEXT NOT NULL,
+  booking_count      INTEGER NOT NULL,
+  gross_volume       NUMERIC(14, 2) NOT NULL,
+  commission_amount  NUMERIC(14, 2) NOT NULL,
+  rates_applied      TEXT NOT NULL, -- human-readable summary, e.g. "5% tier; VISA override 2%"
+  UNIQUE (run_id, agent_id)
 );
