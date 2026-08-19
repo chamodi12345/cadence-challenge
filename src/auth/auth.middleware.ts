@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 const JWT_SECRET = process.env.JWT_SECRET!;
 
 export interface AuthedRequest extends Request {
-  user?: { id: string; companyId: string; role: string };
+  user?: { id: string; companyId: string; role: string; agentId: string | null };
 }
 
 export function requireAuth(req: AuthedRequest, res: Response, next: NextFunction) {
@@ -18,8 +18,9 @@ export function requireAuth(req: AuthedRequest, res: Response, next: NextFunctio
       sub: string;
       companyId: string;
       role: string;
+      agentId: string | null;
     };
-    req.user = { id: payload.sub, companyId: payload.companyId, role: payload.role };
+    req.user = { id: payload.sub, companyId: payload.companyId, role: payload.role, agentId: payload.agentId };
     next();
   } catch {
     return res.status(401).json({ error: { code: 'UNAUTHENTICATED', message: 'Invalid or expired token' } });
