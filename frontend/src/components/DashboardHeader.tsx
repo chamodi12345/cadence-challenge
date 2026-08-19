@@ -12,14 +12,14 @@ export function DashboardHeader() {
   if (!user) return null;
 
   return (
-    <header className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+    <header className="bg-blue-900 border-b border-blue-800 px-4 sm:px-6 py-4 flex items-center justify-between">
       <div>
-        <h1 className="text-lg font-semibold text-slate-900">Cadence</h1>
-        <p className="text-sm text-slate-500">
+        <h1 className="text-lg font-semibold text-white">Cadence</h1>
+        <p className="text-sm text-blue-200">
           {user.fullName} · {ROLE_LABELS[user.role]}
         </p>
       </div>
-      <button onClick={logout} className="text-sm text-slate-500 hover:text-slate-900">
+      <button onClick={logout} className="text-sm text-blue-200 hover:text-white">
         Sign out
       </button>
     </header>

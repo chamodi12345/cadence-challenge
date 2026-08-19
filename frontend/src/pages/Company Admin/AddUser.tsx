@@ -63,7 +63,7 @@ export default function AddUser({ onSuccess, onCancel }: AddUserProps) {
           </p>
         </div>
 
-        <div className="space-y-3 bg-slate-50 border border-slate-200 rounded-lg p-4">
+        <div className="space-y-3 bg-blue-50 border border-blue-100 rounded-lg p-4">
           <div>
             <p className="text-xs font-medium text-slate-400 uppercase tracking-wide">Email</p>
             <p className="text-sm text-slate-900">{created.email}</p>
@@ -71,16 +71,16 @@ export default function AddUser({ onSuccess, onCancel }: AddUserProps) {
           <div>
             <p className="text-xs font-medium text-slate-400 uppercase tracking-wide">Temporary password</p>
             <div className="flex items-center gap-2 mt-1">
-              <code className="flex-1 text-sm font-mono bg-white border border-slate-200 rounded px-3 py-2">
+              <code className="flex-1 text-sm font-mono bg-white border border-blue-200 rounded px-3 py-2">
                 {created.tempPassword}
               </code>
               <button
                 type="button"
                 onClick={handleCopy}
-                className="shrink-0 rounded-md border border-slate-300 p-2 hover:bg-slate-100 transition"
+                className="shrink-0 rounded-md border border-blue-300 p-2 hover:bg-blue-100 transition"
                 aria-label="Copy password"
               >
-                {copied ? <Check size={16} className="text-emerald-600" /> : <Copy size={16} className="text-slate-500" />}
+                {copied ? <Check size={16} className="text-emerald-600" /> : <Copy size={16} className="text-blue-600" />}
               </button>
             </div>
           </div>
@@ -89,7 +89,7 @@ export default function AddUser({ onSuccess, onCancel }: AddUserProps) {
         <button
           type="button"
           onClick={onSuccess}
-          className="w-full rounded-md bg-slate-900 text-white text-sm font-medium py-2.5"
+          className="w-full rounded-md bg-blue-700 text-white text-sm font-medium py-2.5 hover:bg-blue-600"
         >
           Done
         </button>
@@ -117,7 +117,7 @@ export default function AddUser({ onSuccess, onCancel }: AddUserProps) {
           required
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
         />
       </div>
 
@@ -128,7 +128,7 @@ export default function AddUser({ onSuccess, onCancel }: AddUserProps) {
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
         />
       </div>
 
@@ -137,7 +137,7 @@ export default function AddUser({ onSuccess, onCancel }: AddUserProps) {
         <select
           value={role}
           onChange={(e) => setRole(e.target.value as typeof role)}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
         >
           <option value="FINANCE">Finance Admin</option>
           <option value="AGENT">Agent</option>
@@ -152,7 +152,7 @@ export default function AddUser({ onSuccess, onCancel }: AddUserProps) {
             value={agentCode}
             onChange={(e) => setAgentCode(e.target.value)}
             placeholder="e.g. AG-004"
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
           <p className="text-xs text-slate-400">Must match an existing agent record in this company.</p>
         </div>
@@ -162,7 +162,7 @@ export default function AddUser({ onSuccess, onCancel }: AddUserProps) {
         <button
           type="submit"
           disabled={loading}
-          className="flex-1 rounded-md bg-slate-900 text-white text-sm font-medium py-2.5 disabled:opacity-50"
+          className="flex-1 rounded-md bg-blue-700 text-white text-sm font-medium py-2.5 disabled:opacity-50 hover:bg-blue-600"
         >
           {loading ? 'Adding…' : 'Add user'}
         </button>

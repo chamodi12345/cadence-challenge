@@ -46,7 +46,7 @@ export default function EditUser({ user, onSuccess, onCancel }: EditUserProps) {
           required
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
         />
       </div>
 
@@ -55,7 +55,7 @@ export default function EditUser({ user, onSuccess, onCancel }: EditUserProps) {
         <select
           value={role}
           onChange={(e) => setRole(e.target.value as typeof role)}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
         >
           <option value="FINANCE">Finance Admin</option>
           <option value="AGENT">Agent</option>
@@ -66,7 +66,7 @@ export default function EditUser({ user, onSuccess, onCancel }: EditUserProps) {
         <button
           type="submit"
           disabled={loading}
-          className="flex-1 rounded-md bg-slate-900 text-white text-sm font-medium py-2.5 disabled:opacity-50"
+          className="flex-1 rounded-md bg-blue-700 text-white text-sm font-medium py-2.5 disabled:opacity-50 hover:bg-blue-600"
         >
           {loading ? 'Saving…' : 'Save changes'}
         </button>
