@@ -189,6 +189,54 @@ export async function generatePayoutRun(companyId: string, period: string): Prom
     });
   }
 
+  // Team-lead override: 1% flat, per team led, on the OTHER members' volume
+  // only — the lead's own sales are already commissioned via their personal
+  // tier above, so this avoids double-counting. Not effective-dated: reflects
+  // current team membership, not a historical snapshot (Known Gap).
+  const { rows: leadTeams } = await pool.query<{ teamId: string; leadAgentId: string }>(
+    `SELECT t.id AS "teamId", tm.agent_id AS "leadAgentId"
+       FROM teams t
+       JOIN team_members tm ON tm.team_id = t.id AND tm.is_lead = true
+      WHERE t.company_id = $1`,
+    [companyId],
+  );
+
+  for (const { teamId, leadAgentId } of leadTeams) {
+    const { rows: memberVolumeRows } = await pool.query<{ total: string }>(
+      `SELECT COALESCE(SUM(b.amount), 0)::text AS total
+         FROM bookings b
+         JOIN agents a ON a.agent_code = b.agent_code AND a.company_id = b.company_id
+         JOIN team_members tm ON tm.agent_id = a.id AND tm.team_id = $1 AND tm.is_lead = false
+        WHERE b.company_id = $2 AND b.booking_date >= $3 AND b.booking_date <= $4`,
+      [teamId, companyId, start, end],
+    );
+
+    const teamVolume = new Decimal(memberVolumeRows[0]?.total ?? '0');
+    if (teamVolume.isZero()) continue;
+
+    const overrideAmount = teamVolume.times(0.01).toDecimalPlaces(2);
+    const leadAgentCode = agents.find((a) => a.id === leadAgentId)?.agentCode;
+    if (!leadAgentCode) continue;
+
+    const existingLine = lineItems.find((li) => li.agentId === leadAgentId);
+    if (existingLine) {
+      existingLine.commissionAmount = new Decimal(existingLine.commissionAmount)
+        .plus(overrideAmount)
+        .toString();
+      existingLine.ratesApplied += `; team override 1% (Rs ${overrideAmount.toString()})`;
+    } else {
+      lineItems.push({
+        agentId: leadAgentId,
+        agentCode: leadAgentCode,
+        bookingCount: 0,
+        grossVolume: '0.00',
+        commissionAmount: overrideAmount.toString(),
+        ratesApplied: `team override 1% (Rs ${overrideAmount.toString()})`,
+      });
+    }
+    runTotal = runTotal.plus(overrideAmount);
+  }
+
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -203,7 +251,7 @@ export async function generatePayoutRun(companyId: string, period: string): Prom
         'SELECT COUNT(*) FROM payout_runs WHERE company_id = $1',
         [companyId],
       );
-       const runNo = Number(countRows[0]?.count ?? '0') + 1;
+      const runNo = Number(countRows[0]?.count ?? '0') + 1;
       runId = randomUUID();
       await client.query(
         `INSERT INTO payout_runs (id, company_id, run_no, period_start, period_end, status)

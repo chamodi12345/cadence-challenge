@@ -176,13 +176,25 @@ const USERS: UserRow[] = [
   },
   {
     companyId: 'cmp_northwind',
-    email: 'newagent@northwind.test',
-    fullName: 'New Agent',
+    email: 'kavya@northwind.test',
+    fullName: 'Kavya Fernando',
     role: 'AGENT',
     password: 'password123',
     mustChangePassword: true,
     agentId: 'agt_nw_002',
   },
+
+
+  {
+  companyId: 'cmp_northwind',
+  email: 'nimal@northwind.test',
+  fullName: 'Nimal Perera',
+  role: 'AGENT',
+  password: 'password123',
+  mustChangePassword: true,
+  agentId: 'agt_nw_001',
+},
+
 ];
 
 export async function seed(client: Client): Promise<void> {

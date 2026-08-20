@@ -24,6 +24,13 @@ export default function CompanyAdminDashboard() {
             accent="indigo"
           />
           <DashboardCard
+          title="Teams"
+          description="Assign team leads and manage overrides."
+          to="/dashboard/teams"
+          icon={Users}
+          accent="indigo"
+          />
+          <DashboardCard
             title="Import bookings"
             description="Upload a CSV of agent bookings."
             to="/dashboard/import"

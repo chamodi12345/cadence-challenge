@@ -9,8 +9,10 @@ DROP TABLE IF EXISTS agents CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 DROP TABLE IF EXISTS companies CASCADE;
 DROP TYPE IF EXISTS user_role;
+DROP TABLE IF EXISTS team_members CASCADE;
+DROP TABLE IF EXISTS teams CASCADE;
 
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 
 CREATE TYPE user_role AS ENUM ('COMPANY_ADMIN', 'FINANCE', 'AGENT');
 
@@ -72,7 +74,7 @@ CREATE TABLE payout_runs (
 );
 
 CREATE TABLE commission_rule_sets (
-  id             TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  id             TEXT PRIMARY KEY,
   company_id     TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
   label          TEXT NOT NULL,
   effective_from DATE NOT NULL,
@@ -81,7 +83,7 @@ CREATE TABLE commission_rule_sets (
 );
 
 CREATE TABLE commission_tiers (
-  id           TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  id           TEXT PRIMARY KEY,
   rule_set_id  TEXT NOT NULL REFERENCES commission_rule_sets(id) ON DELETE CASCADE,
   min_volume   NUMERIC(14, 2) NOT NULL,
   max_volume   NUMERIC(14, 2),           -- NULL = open-ended top tier
@@ -90,7 +92,7 @@ CREATE TABLE commission_tiers (
 );
 
 CREATE TABLE commission_product_overrides (
-  id           TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  id           TEXT PRIMARY KEY,
   rule_set_id  TEXT NOT NULL REFERENCES commission_rule_sets(id) ON DELETE CASCADE,
   product_code TEXT NOT NULL,
   rate         NUMERIC(6, 4) NOT NULL,
@@ -100,7 +102,7 @@ CREATE TABLE commission_product_overrides (
 CREATE INDEX rule_sets_company_effective_idx ON commission_rule_sets (company_id, effective_from);
 
 CREATE TABLE payout_line_items (
-  id                 TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  id                 TEXT PRIMARY KEY,
   run_id             TEXT NOT NULL REFERENCES payout_runs(id) ON DELETE CASCADE,
   agent_id           TEXT NOT NULL REFERENCES agents(id),
   agent_code         TEXT NOT NULL,
@@ -109,4 +111,20 @@ CREATE TABLE payout_line_items (
   commission_amount  NUMERIC(14, 2) NOT NULL,
   rates_applied      TEXT NOT NULL, -- human-readable summary, e.g. "5% tier; VISA override 2%"
   UNIQUE (run_id, agent_id)
+);
+
+
+CREATE TABLE teams (
+  id          TEXT PRIMARY KEY,
+  company_id  TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  name        TEXT NOT NULL,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE team_members (
+  id       TEXT PRIMARY KEY,
+  team_id  TEXT NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+  agent_id TEXT NOT NULL REFERENCES agents(id) ON DELETE CASCADE,
+  is_lead  BOOLEAN NOT NULL DEFAULT false,
+  UNIQUE (team_id, agent_id)
 );

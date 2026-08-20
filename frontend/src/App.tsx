@@ -10,6 +10,7 @@ import CommissionRules from './pages/Company Admin/CommissionRules';
 import ImportBookings from './pages/Company Admin/ImportBookings';
 import AgentStatement from './pages/Agent/AgentStatement';
 import PayoutsRun from './pages/Company Admin/Payoutsrun';
+import Teams from './pages/Company Admin/Teams';
 
 
 
@@ -48,6 +49,8 @@ export default function App() {
           <Route path="/dashboard/import" element={<ProtectedRoute><ImportBookings /></ProtectedRoute>} />
           <Route path="/statement" element={<ProtectedRoute><AgentStatement /></ProtectedRoute>} />
           <Route path="/dashboard/payouts" element={<ProtectedRoute><PayoutsRun /></ProtectedRoute>} />
+          <Route path="/dashboard/teams" element={<ProtectedRoute><Teams /></ProtectedRoute>} />
+
 
 
 <Route
