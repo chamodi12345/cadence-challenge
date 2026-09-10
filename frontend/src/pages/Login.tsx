@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiPost, ApiError } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
+import { roleHomePath } from '../lib/roles';
 
 interface LoginResponse {
   token: string;
@@ -23,7 +24,7 @@ export default function Login() {
     try {
       const result = await apiPost<LoginResponse>('/auth/login', { email, password });
       login(result.token, result.user);
-      navigate(result.user.mustChangePassword ? '/change-password' : '/dashboard');
+      navigate(result.user.mustChangePassword ? '/change-password' : roleHomePath(result.user.role));
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Something went wrong. Please try again.');
     } finally {
@@ -32,7 +33,7 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50">
+    <div className="min-h-screen flex items-center justify-center bg-blue-950">
       <form onSubmit={handleSubmit} className="w-full max-w-sm bg-white rounded-xl shadow-sm border border-slate-200 p-8 space-y-5">
         <div>
           <h1 className="text-xl font-semibold text-slate-900">Sign in to Cadence</h1>
@@ -54,7 +55,7 @@ export default function Login() {
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
@@ -67,14 +68,14 @@ export default function Login() {
             autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-md bg-slate-900 text-white text-sm font-medium py-2.5 disabled:opacity-50"
+          className="w-full rounded-md bg-blue-700 text-white text-sm font-medium py-2.5 disabled:opacity-50 hover:bg-blue-600"
         >
           {loading ? 'Signing in…' : 'Sign in'}
         </button>

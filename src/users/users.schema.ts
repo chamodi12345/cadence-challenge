@@ -9,13 +9,14 @@ export const createUserSchema = z.object({
   agentCode: z.string().optional(),
 });
 
-
-
 export const updateUserSchema = z.object({
   fullName: z.string().min(1).optional(),
   role: z.enum(['FINANCE', 'AGENT']).optional(),
 });
 
-export type UpdateUserInput = z.infer<typeof updateUserSchema>;
+export const idParamSchema = z.object({
+  id: z.string().uuid(),
+});
 
+export type UpdateUserInput = z.infer<typeof updateUserSchema>;
 export type CreateUserInput = z.infer<typeof createUserSchema>;

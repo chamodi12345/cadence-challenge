@@ -32,14 +32,15 @@ CREATE TABLE agents (
 );
 
 CREATE TABLE users (
-  id            TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  id            TEXT PRIMARY KEY,
   company_id    TEXT NOT NULL REFERENCES companies(id),
   email         TEXT NOT NULL UNIQUE,
   password_hash TEXT NOT NULL,
   full_name     TEXT NOT NULL,
   role          user_role NOT NULL,
   agent_id      TEXT REFERENCES agents(id),
-   must_change_password BOOLEAN NOT NULL DEFAULT false,
+  must_change_password BOOLEAN NOT NULL DEFAULT false,
+  password_reset_required_by TIMESTAMPTZ,
   created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
 
   UNIQUE (company_id, email)

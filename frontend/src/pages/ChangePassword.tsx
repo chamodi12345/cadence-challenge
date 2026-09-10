@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiPatch, ApiError } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
+import { roleHomePath } from '../lib/roles';
 
 export default function ChangePassword() {
   const [newPassword, setNewPassword] = useState('');
@@ -9,7 +10,7 @@ export default function ChangePassword() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { updateUser } = useAuth();
+  const { user, updateUser } = useAuth();
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -24,7 +25,7 @@ export default function ChangePassword() {
     try {
       await apiPatch('/auth/change-password', { newPassword });
       updateUser({ mustChangePassword: false });
-      navigate('/dashboard');
+      navigate(user ? roleHomePath(user.role) : '/login');
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Something went wrong. Please try again.');
     } finally {
@@ -33,7 +34,7 @@ export default function ChangePassword() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50">
+    <div className="min-h-screen flex items-center justify-center bg-blue-950">
       <form onSubmit={handleSubmit} className="w-full max-w-sm bg-white rounded-xl shadow-sm border border-slate-200 p-8 space-y-5">
         <div>
           <h1 className="text-xl font-semibold text-slate-900">Set your password</h1>
@@ -58,7 +59,7 @@ export default function ChangePassword() {
             autoComplete="new-password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
@@ -72,14 +73,14 @@ export default function ChangePassword() {
             autoComplete="new-password"
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-md bg-slate-900 text-white text-sm font-medium py-2.5 disabled:opacity-50"
+          className="w-full rounded-md bg-blue-700 text-white text-sm font-medium py-2.5 disabled:opacity-50 hover:bg-blue-600"
         >
           {loading ? 'Saving…' : 'Save and continue'}
         </button>

@@ -13,12 +13,15 @@ interface UserRow {
   full_name: string;
   role: 'COMPANY_ADMIN' | 'FINANCE' | 'AGENT';
   must_change_password: boolean;
+  agent_id: string | null;
+  password_reset_required_by: string | null; 
 }
 
 export async function login(email: string, password: string) {
   const { rows } = await pool.query<UserRow>(
-    `SELECT id, company_id, email, password_hash, full_name, role, must_change_password
-       FROM users WHERE email = $1`,
+   `SELECT id, company_id, email, password_hash, full_name, role, must_change_password, agent_id,
+        password_reset_required_by
+   FROM users WHERE email = $1`,
     [email]
   );
   const user = rows[0];
@@ -28,8 +31,17 @@ export async function login(email: string, password: string) {
   const passwordMatches = await bcrypt.compare(password, user.password_hash);
   if (!passwordMatches) return null;
 
+
+  if (
+  user.must_change_password &&
+  user.password_reset_required_by &&
+  new Date(user.password_reset_required_by) < new Date()
+) {
+  return null;
+}
+
   const token = jwt.sign(
-    { sub: user.id, companyId: user.company_id, role: user.role },
+    { sub: user.id, companyId: user.company_id, role: user.role,  agentId: user.agent_id  },
     JWT_SECRET,
     { expiresIn: JWT_EXPIRES_IN }
   );
@@ -43,14 +55,15 @@ export async function login(email: string, password: string) {
       role: user.role,
       companyId: user.company_id,
       mustChangePassword: user.must_change_password, // <-- new
+      agentId: user.agent_id, // <-- new
     },
   };
 }
 
 export async function changePassword(userId: string, newPassword: string): Promise<void> {
   const passwordHash = await bcrypt.hash(newPassword, 10);
-  await pool.query(
-    `UPDATE users SET password_hash = $1, must_change_password = false WHERE id = $2`,
-    [passwordHash, userId]
-  );
+ await pool.query(
+  `UPDATE users SET password_hash = $1, must_change_password = false, password_reset_required_by = NULL WHERE id = $2`,
+  [passwordHash, userId]
+);
 }

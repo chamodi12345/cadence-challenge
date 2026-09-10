@@ -1,9 +1,7 @@
 import { Router } from 'express';
 import { requireAuth, requireRole, AuthedRequest } from '../auth/auth.middleware';
-import { createUserSchema } from './users.schema';
-import { createUser, listUsers, HttpError } from './users.service';
-import { updateUserSchema } from './users.schema';
-import { updateUser, deleteUser } from './users.service';
+import { createUserSchema, updateUserSchema, idParamSchema } from './users.schema';
+import { createUser, listUsers, updateUser, deleteUser, HttpError } from './users.service';
 
 export const usersRouter = Router();
 
@@ -43,10 +41,14 @@ usersRouter.post('/', async (req: AuthedRequest, res) => {
   }
 });
 
-
-
-
 usersRouter.patch('/:id', async (req: AuthedRequest, res) => {
+  const paramsResult = idParamSchema.safeParse(req.params);
+  if (!paramsResult.success) {
+    return res.status(400).json({
+      error: { code: 'VALIDATION_ERROR', message: 'Invalid user id' },
+    });
+  }
+
   const parsed = updateUserSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({
@@ -59,7 +61,7 @@ usersRouter.patch('/:id', async (req: AuthedRequest, res) => {
   }
 
   try {
-    const result = await updateUser(req.user!.companyId, req.params.id, parsed.data);
+    const result = await updateUser(req.user!.companyId, paramsResult.data.id, parsed.data);
     return res.status(200).json({ data: result });
   } catch (err) {
     if (err instanceof HttpError) {
@@ -70,8 +72,15 @@ usersRouter.patch('/:id', async (req: AuthedRequest, res) => {
 });
 
 usersRouter.delete('/:id', async (req: AuthedRequest, res) => {
+  const paramsResult = idParamSchema.safeParse(req.params);
+  if (!paramsResult.success) {
+    return res.status(400).json({
+      error: { code: 'VALIDATION_ERROR', message: 'Invalid user id' },
+    });
+  }
+
   try {
-    await deleteUser(req.user!.companyId, req.params.id, req.user!.id);
+    await deleteUser(req.user!.companyId, paramsResult.data.id, req.user!.id);
     return res.status(200).json({ data: { success: true } });
   } catch (err) {
     if (err instanceof HttpError) {

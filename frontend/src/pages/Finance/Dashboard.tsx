@@ -1,28 +1,26 @@
-// src/pages/Company Admin/CompanyAdminDashboard.tsx
-import { Users, UploadCloud, SlidersHorizontal, Wallet } from 'lucide-react';
+// src/pages/Finance/Dashboard.tsx
+import { UploadCloud, SlidersHorizontal, Wallet } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { ROLE_LABELS } from '../../lib/roles';
 import { DashboardCard } from '../../components/DashboardCard';
 
-export default function CompanyAdminDashboard() {
+export default function FinanceDashboard() {
+  const { user } = useAuth();
+  if (!user) return null;
+
   return (
     <div className="min-h-screen bg-blue-950">
       <div className="w-full max-w-screen-2xl mx-auto px-6 sm:px-8 lg:px-10 py-8 space-y-6">
         <div>
           <h2 className="text-xs font-semibold text-blue-300 uppercase tracking-wider">
-            Company Admin
+            {ROLE_LABELS[user.role]}
           </h2>
           <p className="text-sm text-blue-200 mt-1">
-            Manage your team, bookings, and monthly payouts.
+            Manage bookings, commission rules, and payouts for {user.companyId}.
           </p>
         </div>
 
         <div className="grid grid-cols-1 gap-4">
-          <DashboardCard
-            title="Manage users"
-            description="Add Finance staff and Agents to your company."
-            to="/dashboard/users"
-            icon={Users}
-            accent="indigo"
-          />
           <DashboardCard
             title="Import bookings"
             description="Upload a CSV of agent bookings."

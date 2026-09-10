@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import { pool } from '../db/pool';
 import type { CreateUserInput, UpdateUserInput } from './users.schema';
+import { randomBytes, randomUUID } from 'node:crypto';
 
 export class HttpError extends Error {
   constructor(public status: number, message: string) {
@@ -38,17 +39,37 @@ export async function createUser(companyId: string, input: CreateUserInput) {
 
   // No email/SMTP integration yet, so we generate a temp password and
   // return it once — same pattern you'd use for real email delivery later.
-  const tempPassword = Math.random().toString(36).slice(2, 12);
+  const tempPassword = randomBytes(12).toString('base64url');
   const passwordHash = await bcrypt.hash(tempPassword, 10);
 
-  // users.id has DEFAULT gen_random_uuid()::text, so we don't supply one —
-  // let the DB generate it and hand it back via RETURNING.
-  const inserted = await pool.query(
-    `INSERT INTO users (company_id, email, full_name, password_hash, role, agent_id)
-     VALUES ($1, $2, $3, $4, $5, $6)
-     RETURNING id`,
-    [companyId, input.email, input.fullName, passwordHash, input.role, agentId]
-  );
+
+
+  const userId = randomUUID();
+  
+const inserted = await pool.query(
+  `INSERT INTO users (
+     id,
+     company_id,
+     email,
+     full_name,
+     password_hash,
+     role,
+     agent_id,
+     must_change_password,
+     password_reset_required_by
+   )
+   VALUES ($1, $2, $3, $4, $5, $6, $7, true, now() + interval '7 days')
+   RETURNING id`,
+  [
+    userId,
+    companyId,
+    input.email,
+    input.fullName,
+    passwordHash,
+    input.role,
+    agentId
+  ]
+);
 
   return {
     id: inserted.rows[0].id,

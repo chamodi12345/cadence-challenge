@@ -24,9 +24,9 @@ export function DashboardCard({ title, description, to, icon: Icon, accent }: Da
   return (
     <Link
       to={to}
-      className={`group flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-5
-                  transition-all duration-150 hover:border-slate-300 hover:shadow-md hover:-translate-y-0.5
-                  focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400`}
+      className="group flex items-start gap-4 rounded-xl border border-blue-800 bg-white p-6
+                  transition-all duration-150 hover:border-blue-300 hover:shadow-lg hover:-translate-y-0.5
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
     >
       <div
         className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg ${style.bg} ${style.text}
@@ -36,14 +36,15 @@ export function DashboardCard({ title, description, to, icon: Icon, accent }: Da
       </div>
 
       <div className="min-w-0 flex-1">
-        <h3 className="font-medium text-slate-900">{title}</h3>
-        <p className="text-sm text-slate-500 mt-0.5 truncate">{description}</p>
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="font-medium text-slate-900 whitespace-nowrap">{title}</h3>
+          <ChevronRight
+            size={18}
+            className="shrink-0 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-slate-500"
+          />
+        </div>
+        <p className="text-sm text-slate-500 mt-1">{description}</p>
       </div>
-
-      <ChevronRight
-        size={18}
-        className="shrink-0 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-slate-500"
-      />
     </Link>
   );
 }

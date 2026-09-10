@@ -5,6 +5,8 @@
  * Note that agent code AG-001 exists in BOTH companies — that is intentional.
  */
 import type { Client } from 'pg';
+import bcrypt from 'bcrypt';
+import { randomUUID } from 'node:crypto';
 
 type CompanyRow = { id: string; name: string };
 type AgentRow = {
@@ -23,6 +25,15 @@ type BookingRow = {
   bookingDate: string;
   amount: string;
   productCode: string;
+};
+type UserRow = {
+  companyId: string;
+  email: string;
+  fullName: string;
+  role: 'COMPANY_ADMIN' | 'FINANCE' | 'AGENT';
+  password: string;
+  mustChangePassword: boolean;
+  agentId?: string;
 };
 
 const COMPANIES: CompanyRow[] = [
@@ -87,9 +98,6 @@ const BOOKINGS: BookingRow[] = [
   b('nw', 6, 'cmp_northwind', 'NW-2026-0106', 'AG-001', '2026-02-28', '6400.25', 'VISA'),
 
   // --- Northwind, March 2026 ---
-  // AG-001's March bookings sum to exactly 16,399.50. Reconciling that total, and the
-  // commission derived from it, against Finance's spreadsheet is worth doing by hand
-  // once before you trust any code.
   b('nw', 7, 'cmp_northwind', 'NW-2026-0201', 'AG-001', '2026-03-02', '5200.30', 'TRAVEL'),
   b('nw', 8, 'cmp_northwind', 'NW-2026-0202', 'AG-001', '2026-03-06', '4300.40', 'TRAVEL'),
   b('nw', 9, 'cmp_northwind', 'NW-2026-0203', 'AG-001', '2026-03-13', '3100.20', 'VISA'),
@@ -102,12 +110,9 @@ const BOOKINGS: BookingRow[] = [
   b('nw', 15, 'cmp_northwind', 'NW-2026-0209', 'AG-002', '2026-03-24', '7425.95', 'VISA'),
   b('nw', 16, 'cmp_northwind', 'NW-2026-0210', 'AG-002', '2026-03-30', '12080.00', 'INSURANCE'),
 
-  // AG-003 left on 2026-03-15. One booking before, one after.
   b('nw', 17, 'cmp_northwind', 'NW-2026-0211', 'AG-003', '2026-03-10', '5600.00', 'TRAVEL'),
   b('nw', 18, 'cmp_northwind', 'NW-2026-0212', 'AG-003', '2026-03-20', '2100.00', 'TRAVEL'),
 
-  // Bookings on the very first and very last day of the period — period boundaries and
-  // timezones are worth thinking about.
   b('nw', 19, 'cmp_northwind', 'NW-2026-0213', 'AG-002', '2026-03-01', '990.00', 'VISA'),
 
   // --- Northwind, April 2026 (outside the March period) ---
@@ -115,7 +120,6 @@ const BOOKINGS: BookingRow[] = [
   b('nw', 21, 'cmp_northwind', 'NW-2026-0302', 'AG-002', '2026-04-08', '4300.00', 'INSURANCE'),
 
   // --- Acme, March 2026 ---
-  // Acme also has an AG-001. Their data must never appear in a Northwind report.
   b('ac', 1, 'cmp_acme', 'AC-9001', 'AG-001', '2026-03-04', '55000.00', 'FREIGHT'),
   b('ac', 2, 'cmp_acme', 'AC-9002', 'AG-001', '2026-03-12', '48250.00', 'FREIGHT'),
   b('ac', 3, 'cmp_acme', 'AC-9003', 'AG-001', '2026-03-19', '61300.50', 'FREIGHT'),
@@ -145,6 +149,41 @@ function b(
     productCode,
   };
 }
+
+/**
+ * Login users. Passwords are the same across all seeded users for local dev
+ * convenience — 'password123' — never do this outside a local seed script.
+ *
+ * newagent@northwind.test has mustChangePassword: true so the forced
+ * first-login password-change flow has a real account to exercise.
+ */
+const USERS: UserRow[] = [
+  {
+    companyId: 'cmp_northwind',
+    email: 'admin@northwind.test',
+    fullName: 'Nimal Perera',
+    role: 'COMPANY_ADMIN',
+    password: 'password123',
+    mustChangePassword: true,
+  },
+  {
+    companyId: 'cmp_acme',
+    email: 'admin@acme.test',
+    fullName: 'Dilani Rathnayake',
+    role: 'COMPANY_ADMIN',
+    password: 'password123',
+    mustChangePassword: true,
+  },
+  {
+    companyId: 'cmp_northwind',
+    email: 'newagent@northwind.test',
+    fullName: 'New Agent',
+    role: 'AGENT',
+    password: 'password123',
+    mustChangePassword: true,
+    agentId: 'agt_nw_002',
+  },
+];
 
 export async function seed(client: Client): Promise<void> {
   for (const company of COMPANIES) {
@@ -179,7 +218,26 @@ export async function seed(client: Client): Promise<void> {
     );
   }
 
+  for (const user of USERS) {
+    const passwordHash = await bcrypt.hash(user.password, 10);
+    await client.query(
+      `INSERT INTO users
+         (id, company_id, email, password_hash, full_name, role, agent_id, must_change_password)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [
+        randomUUID(),
+        user.companyId,
+        user.email,
+        passwordHash,
+        user.fullName,
+        user.role,
+        user.agentId ?? null,
+        user.mustChangePassword,
+      ],
+    );
+  }
+
   console.log(
-    `seeded ${COMPANIES.length} companies, ${AGENTS.length} agents, ${BOOKINGS.length} bookings`,
+    `seeded ${COMPANIES.length} companies, ${AGENTS.length} agents, ${BOOKINGS.length} bookings, ${USERS.length} users`,
   );
 }
