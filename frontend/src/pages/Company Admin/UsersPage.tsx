@@ -16,9 +16,9 @@ interface CompanyUser {
 }
 
 const ROLE_STYLES: Record<CompanyUser['role'], string> = {
-  COMPANY_ADMIN: 'bg-indigo-50 text-indigo-700',
-  FINANCE: 'bg-amber-50 text-amber-700',
-  AGENT: 'bg-emerald-50 text-emerald-700',
+  COMPANY_ADMIN: 'bg-indigo-500/20 text-indigo-300',
+  FINANCE: 'bg-amber-500/20 text-amber-300',
+  AGENT: 'bg-emerald-500/20 text-emerald-300',
 };
 
 const ROLE_LABELS: Record<CompanyUser['role'], string> = {
@@ -67,66 +67,63 @@ export default function UsersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-blue-950">
-      <div className="w-full max-w-screen-2xl mx-auto px-6 sm:px-8 lg:px-10 py-8 space-y-6">
+    <div className="min-h-screen">
+      <div className="mx-auto w-full max-w-screen-2xl space-y-6 px-6 py-8 sm:px-8 lg:px-10">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xs font-semibold text-blue-300 uppercase tracking-wider">Users</h2>
-            <p className="text-sm text-blue-200 mt-1">Everyone with access to your company's account.</p>
+            <h2 className="page-title">Users</h2>
+            <p className="page-subtitle">Everyone with access to your company's account.</p>
           </div>
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="flex items-center gap-2 rounded-md bg-blue-700 text-white text-sm font-medium px-4 py-2 hover:bg-blue-600 transition"
-          >
+          <button onClick={() => setShowAddForm(true)} className="btn-primary">
             <UserPlus size={16} />
             Add user
           </button>
         </div>
 
         {error && (
-          <div role="alert" className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+          <div role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
             {error}
           </div>
         )}
 
         {users === null && !error && (
-          <div className="text-sm text-blue-200 py-8 text-center">Loading users…</div>
+          <div className="py-8 text-center text-sm text-slate-400">Loading users…</div>
         )}
 
         {users !== null && users.length === 0 && (
-          <div className="text-sm text-blue-200 py-8 text-center border border-dashed border-blue-800 rounded-xl">
+          <div className="rounded-xl border border-dashed border-white/10 py-8 text-center text-sm text-slate-400">
             No users yet. Add your first Finance or Agent account.
           </div>
         )}
 
         {users !== null && users.length > 0 && (
-          <div className="bg-white border border-blue-800 rounded-xl overflow-hidden">
+          <div className="card overflow-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-100 text-left text-slate-400">
-                  <th className="font-medium px-5 py-3">Name</th>
-                  <th className="font-medium px-5 py-3">Email</th>
-                  <th className="font-medium px-5 py-3">Role</th>
-                  <th className="font-medium px-5 py-3 text-right">Actions</th>
+                <tr className="border-b border-white/10 text-left">
+                  <th className="th">Name</th>
+                  <th className="th">Email</th>
+                  <th className="th">Role</th>
+                  <th className="th text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {users.map((u) => {
                   const isSelf = u.id === currentUser?.id;
                   return (
-                    <tr key={u.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50 transition">
-                      <td className="px-5 py-3 text-slate-900">
+                    <tr key={u.id} className="border-b border-white/5 transition last:border-0 hover:bg-white/5">
+                      <td className="px-5 py-3 text-slate-100">
                         {u.full_name}
-                        {isSelf && <span className="ml-2 text-xs text-slate-400">(you)</span>}
+                        {isSelf && <span className="ml-2 text-xs text-slate-500">(you)</span>}
                       </td>
-                      <td className="px-5 py-3 text-slate-500">
+                      <td className="px-5 py-3 text-slate-400">
                         <span className="inline-flex items-center gap-1.5">
-                          <Mail size={14} className="text-slate-300" />
+                          <Mail size={14} className="text-slate-500" />
                           {u.email}
                         </span>
                       </td>
                       <td className="px-5 py-3">
-                        <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${ROLE_STYLES[u.role]}`}>
+                        <span className={`badge ${ROLE_STYLES[u.role]}`}>
                           <Shield size={12} />
                           {ROLE_LABELS[u.role]}
                         </span>
@@ -137,14 +134,14 @@ export default function UsersPage() {
                             <>
                               <button
                                 onClick={() => setEditingUser(u)}
-                                className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition"
+                                className="rounded-md p-1.5 text-slate-400 transition hover:bg-white/10 hover:text-white"
                                 aria-label={`Edit ${u.full_name}`}
                               >
                                 <Pencil size={15} />
                               </button>
                               <button
                                 onClick={() => setDeletingUser(u)}
-                                className="p-1.5 rounded-md text-slate-400 hover:text-red-600 hover:bg-red-50 transition"
+                                className="rounded-md p-1.5 text-slate-400 transition hover:bg-red-500/10 hover:text-red-400"
                                 aria-label={`Delete ${u.full_name}`}
                               >
                                 <Trash2 size={15} />
@@ -162,8 +159,8 @@ export default function UsersPage() {
         )}
 
         {showAddForm && (
-          <div className="fixed inset-0 bg-blue-950/60 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl max-w-md w-full">
+          <div className="modal-backdrop">
+            <div className="card max-w-md w-full">
               <AddUser
                 onSuccess={() => {
                   setShowAddForm(false);
@@ -176,8 +173,8 @@ export default function UsersPage() {
         )}
 
         {editingUser && (
-          <div className="fixed inset-0 bg-blue-950/60 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl max-w-md w-full">
+          <div className="modal-backdrop">
+            <div className="card max-w-md w-full">
               <EditUser
                 user={editingUser}
                 onSuccess={() => {
@@ -191,14 +188,14 @@ export default function UsersPage() {
         )}
 
         {deletingUser && (
-          <div className="fixed inset-0 bg-blue-950/60 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl max-w-sm w-full p-6 space-y-4">
-              <h2 className="text-lg font-semibold text-slate-900">Remove {deletingUser.full_name}?</h2>
-              <p className="text-sm text-slate-500">
+          <div className="modal-backdrop">
+            <div className="card max-w-sm w-full space-y-4 p-6">
+              <h2 className="text-lg font-semibold text-slate-100">Remove {deletingUser.full_name}?</h2>
+              <p className="text-sm text-slate-400">
                 They'll lose access to Cadence immediately. This can't be undone.
               </p>
               {deleteError && (
-                <div role="alert" className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+                <div role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
                   {deleteError}
                 </div>
               )}
@@ -206,13 +203,13 @@ export default function UsersPage() {
                 <button
                   onClick={confirmDelete}
                   disabled={deleting}
-                  className="flex-1 rounded-md bg-red-600 text-white text-sm font-medium py-2.5 hover:bg-red-700 disabled:opacity-50 transition"
+                  className="btn-danger flex-1 py-2.5"
                 >
                   {deleting ? 'Removing…' : 'Remove user'}
                 </button>
                 <button
                   onClick={() => { setDeletingUser(null); setDeleteError(null); }}
-                  className="rounded-md border border-slate-300 text-slate-600 text-sm font-medium px-4 py-2.5 hover:bg-slate-50"
+                  className="btn-secondary px-4 py-2.5"
                 >
                   Cancel
                 </button>

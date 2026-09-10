@@ -15,7 +15,7 @@ interface ImportResult {
 
 type State = 'idle' | 'uploading' | 'done' | 'error';
 
-const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
+const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:4700';
 
 export default function ImportBookings() {
   const [file, setFile] = useState<File | null>(null);
@@ -68,83 +68,74 @@ export default function ImportBookings() {
   }
 
   return (
-    <div className="min-h-screen bg-blue-950">
-      <div className="w-full max-w-screen-2xl mx-auto px-6 sm:px-8 lg:px-10 py-8 space-y-6">
+    <div className="min-h-screen">
+      <div className="mx-auto w-full max-w-screen-2xl space-y-6 px-6 py-8 sm:px-8 lg:px-10">
         <div>
-          <h2 className="text-xs font-semibold text-blue-300 uppercase tracking-wider">
-            Import Bookings
-          </h2>
-          <p className="text-sm text-blue-200 mt-1">
+          <h2 className="page-title">Import Bookings</h2>
+          <p className="page-subtitle">
             Upload a CSV of bookings. Required columns: external_ref, agent_code, booking_date
             (YYYY-MM-DD), amount, product_code.
           </p>
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white rounded-xl border border-blue-800 p-6 space-y-4"
-        >
+        <form onSubmit={handleSubmit} className="card space-y-4 p-6">
           <input
             type="file"
             accept=".csv"
             onChange={handleFileChange}
-            className="block w-full text-sm text-slate-600 file:mr-4 file:rounded-md file:border-0 file:bg-blue-700 file:text-white file:px-4 file:py-2 file:text-sm file:font-medium hover:file:bg-blue-600"
+            className="block w-full text-sm text-slate-300 file:mr-4 file:rounded-lg file:border-0 file:bg-gradient-to-r file:from-indigo-500 file:to-violet-500 file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:brightness-110"
           />
 
-          <button
-            type="submit"
-            disabled={!file || state === 'uploading'}
-            className="rounded-md bg-blue-700 text-white text-sm font-medium px-4 py-2 disabled:opacity-50 hover:bg-blue-600"
-          >
+          <button type="submit" disabled={!file || state === 'uploading'} className="btn-primary px-4">
             {state === 'uploading' ? 'Importing…' : 'Import'}
           </button>
         </form>
 
         {state === 'error' && (
-          <div role="alert" className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+          <div role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
             {error}
           </div>
         )}
 
         {state === 'done' && result && (
-          <div className="bg-white rounded-xl border border-blue-800 p-6 space-y-4">
+          <div className="card space-y-4 p-6">
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
-                <p className="text-2xl font-semibold text-slate-900">{result.totalRows}</p>
-                <p className="text-xs text-slate-500 uppercase tracking-wide">Total rows</p>
+                <p className="text-2xl font-semibold text-slate-100">{result.totalRows}</p>
+                <p className="text-xs uppercase tracking-wide text-slate-500">Total rows</p>
               </div>
               <div>
-                <p className="text-2xl font-semibold text-emerald-600">{result.accepted}</p>
-                <p className="text-xs text-slate-500 uppercase tracking-wide">Accepted</p>
+                <p className="text-2xl font-semibold text-emerald-300">{result.accepted}</p>
+                <p className="text-xs uppercase tracking-wide text-slate-500">Accepted</p>
               </div>
               <div>
-                <p className="text-2xl font-semibold text-red-600">{result.rejected}</p>
-                <p className="text-xs text-slate-500 uppercase tracking-wide">Rejected</p>
+                <p className="text-2xl font-semibold text-rose-300">{result.rejected}</p>
+                <p className="text-xs uppercase tracking-wide text-slate-500">Rejected</p>
               </div>
             </div>
 
             {result.rejections.length === 0 ? (
-              <p className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md px-3 py-2">
+              <p className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-300">
                 All rows imported successfully.
               </p>
             ) : (
               <div>
-                <p className="text-xs text-slate-400 uppercase tracking-wide font-medium mb-2">
+                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">
                   Rejected rows
                 </p>
-                <div className="max-h-80 overflow-y-auto border border-slate-200 rounded-md">
+                <div className="max-h-80 overflow-y-auto rounded-lg border border-white/10">
                   <table className="w-full text-sm">
-                    <thead className="bg-slate-50 sticky top-0">
-                      <tr className="text-left text-xs text-slate-500 uppercase tracking-wide">
+                    <thead className="sticky top-0 bg-slate-900/90">
+                      <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
                         <th className="px-3 py-2 font-medium">Row</th>
                         <th className="px-3 py-2 font-medium">Reason</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-white/5">
                       {result.rejections.map((r) => (
                         <tr key={r.row}>
-                          <td className="px-3 py-1.5 text-slate-700">{r.row}</td>
-                          <td className="px-3 py-1.5 text-slate-700">{r.reason}</td>
+                          <td className="px-3 py-1.5 text-slate-300">{r.row}</td>
+                          <td className="px-3 py-1.5 text-slate-300">{r.reason}</td>
                         </tr>
                       ))}
                     </tbody>

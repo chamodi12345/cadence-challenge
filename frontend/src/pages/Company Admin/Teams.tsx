@@ -62,44 +62,41 @@ export default function Teams() {
   }
 
   return (
-    <div className="min-h-screen bg-blue-950">
-      <div className="w-full max-w-screen-2xl mx-auto px-6 sm:px-8 lg:px-10 py-8 space-y-6">
+    <div className="min-h-screen">
+      <div className="mx-auto w-full max-w-screen-2xl space-y-6 px-6 py-8 sm:px-8 lg:px-10">
         <div>
-          <h2 className="text-xs font-semibold text-blue-300 uppercase tracking-wider">Teams</h2>
-          <p className="text-sm text-blue-200 mt-1">
+          <h2 className="page-title">Teams</h2>
+          <p className="page-subtitle">
             A team's lead earns an extra 1% on the other members' booking volume, on top of
             their own commission.
           </p>
         </div>
 
-        <form onSubmit={handleCreateTeam} className="bg-white border border-blue-800 rounded-xl p-5 flex items-end gap-3">
-          <div className="space-y-1 flex-1">
-            <label className="text-sm font-medium text-slate-700">New team name</label>
+        <form onSubmit={handleCreateTeam} className="card flex items-end gap-3 p-5">
+          <div className="flex-1 space-y-1">
+            <label className="label">New team name</label>
             <input
               required
               value={newTeamName}
               onChange={(e) => setNewTeamName(e.target.value)}
               placeholder="e.g. Colombo Travel Team"
-              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="input w-full"
             />
           </div>
-          <button
-            type="submit"
-            className="rounded-md bg-blue-700 text-white text-sm font-medium px-4 py-2 hover:bg-blue-600"
-          >
+          <button type="submit" className="btn-primary px-4">
             Create team
           </button>
         </form>
 
-        {state === 'loading' && <p className="text-sm text-blue-200">Loading teams…</p>}
+        {state === 'loading' && <p className="text-sm text-slate-400">Loading teams…</p>}
         {state === 'error' && (
-          <div role="alert" className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+          <div role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
             {error}
           </div>
         )}
 
         {state === 'ready' && teams.length === 0 && (
-          <div className="text-sm text-blue-200 py-8 text-center border border-dashed border-blue-800 rounded-xl">
+          <div className="rounded-xl border border-dashed border-white/10 py-8 text-center text-sm text-slate-400">
             No teams yet. Create one above.
           </div>
         )}
@@ -144,42 +141,42 @@ function TeamCard({ team, onChanged, onDeleteTeam }: { team: Team; onChanged: ()
   }
 
   return (
-    <div className="bg-white border border-blue-800 rounded-xl p-5 space-y-4">
+    <div className="card space-y-4 p-5">
       <div className="flex items-center justify-between">
-        <h3 className="font-medium text-slate-900">{team.name}</h3>
-        <button onClick={onDeleteTeam} className="text-xs text-red-600 hover:text-red-700 font-medium">
+        <h3 className="font-medium text-slate-100">{team.name}</h3>
+        <button onClick={onDeleteTeam} className="text-xs font-medium text-rose-400 transition hover:text-rose-300">
           Delete team
         </button>
       </div>
 
       {team.members.length === 0 ? (
-        <p className="text-sm text-slate-400">No members yet.</p>
+        <p className="text-sm text-slate-500">No members yet.</p>
       ) : (
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-slate-100 text-left text-slate-400">
-              <th className="font-medium pb-2">Agent</th>
-              <th className="font-medium pb-2">Role</th>
-              <th className="font-medium pb-2 text-right">Actions</th>
+            <tr className="border-b border-white/10 text-left text-slate-400">
+              <th className="pb-2 font-medium">Agent</th>
+              <th className="pb-2 font-medium">Role</th>
+              <th className="pb-2 text-right font-medium">Actions</th>
             </tr>
           </thead>
           <tbody>
             {team.members.map((m) => (
-              <tr key={m.id} className="border-b border-slate-50 last:border-0">
-                <td className="py-1.5 text-slate-900">{m.fullName} ({m.agentCode})</td>
+              <tr key={m.id} className="border-b border-white/5 last:border-0">
+                <td className="py-1.5 text-slate-100">{m.fullName} ({m.agentCode})</td>
                 <td className="py-1.5">
                   {m.isLead ? (
-                    <span className="text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full font-medium">
+                    <span className="badge bg-indigo-500/20 text-indigo-300">
                       Lead — 1% override
                     </span>
                   ) : (
-                    <span className="text-xs text-slate-400">Member</span>
+                    <span className="text-xs text-slate-500">Member</span>
                   )}
                 </td>
                 <td className="py-1.5 text-right">
                   <button
                     onClick={() => handleRemoveMember(m.id)}
-                    className="text-xs text-red-600 hover:text-red-700 font-medium"
+                    className="text-xs font-medium text-rose-400 transition hover:text-rose-300"
                   >
                     Remove
                   </button>
@@ -190,26 +187,23 @@ function TeamCard({ team, onChanged, onDeleteTeam }: { team: Team; onChanged: ()
         </table>
       )}
 
-      <form onSubmit={handleAddMember} className="flex items-end gap-2 pt-2 border-t border-slate-100">
-        {error && <p className="text-xs text-red-600">{error}</p>}
+      <form onSubmit={handleAddMember} className="flex flex-wrap items-end gap-2 border-t border-white/10 pt-2">
+        {error && <p className="w-full text-xs text-rose-400">{error}</p>}
         <div className="space-y-1">
-          <label className="text-xs font-medium text-slate-700">Agent code</label>
+          <label className="text-xs font-medium text-slate-400">Agent code</label>
           <input
             required
             value={agentCode}
             onChange={(e) => setAgentCode(e.target.value)}
             placeholder="e.g. AG-002"
-            className="w-32 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+            className="input w-32"
           />
         </div>
-        <label className="flex items-center gap-1.5 text-xs text-slate-600 pb-2">
-          <input type="checkbox" checked={isLead} onChange={(e) => setIsLead(e.target.checked)} />
+        <label className="flex items-center gap-1.5 pb-2 text-xs text-slate-400">
+          <input type="checkbox" checked={isLead} onChange={(e) => setIsLead(e.target.checked)} className="accent-indigo-500" />
           Team lead
         </label>
-        <button
-          type="submit"
-          className="rounded-md bg-blue-700 text-white text-xs font-medium px-3 py-1.5 hover:bg-blue-600"
-        >
+        <button type="submit" className="btn-primary px-3 py-1.5 text-xs">
           Add member
         </button>
       </form>

@@ -55,42 +55,38 @@ export default function AddUser({ onSuccess, onCancel }: AddUserProps) {
   // --- Stage 2: show the temp password once, before closing ---
   if (created) {
     return (
-      <div className="p-8 space-y-5">
+      <div className="space-y-5 p-8">
         <div>
-          <h1 className="text-lg font-semibold text-slate-900">User created</h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <h1 className="text-lg font-semibold text-slate-100">User created</h1>
+          <p className="mt-1 text-sm text-slate-400">
             Share this temporary password with {created.fullName}. It won't be shown again.
           </p>
         </div>
 
-        <div className="space-y-3 bg-blue-50 border border-blue-100 rounded-lg p-4">
+        <div className="space-y-3 rounded-lg border border-indigo-400/30 bg-indigo-500/10 p-4">
           <div>
-            <p className="text-xs font-medium text-slate-400 uppercase tracking-wide">Email</p>
-            <p className="text-sm text-slate-900">{created.email}</p>
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Email</p>
+            <p className="text-sm text-slate-100">{created.email}</p>
           </div>
           <div>
-            <p className="text-xs font-medium text-slate-400 uppercase tracking-wide">Temporary password</p>
-            <div className="flex items-center gap-2 mt-1">
-              <code className="flex-1 text-sm font-mono bg-white border border-blue-200 rounded px-3 py-2">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Temporary password</p>
+            <div className="mt-1 flex items-center gap-2">
+              <code className="flex-1 rounded border border-white/10 bg-black/30 px-3 py-2 font-mono text-sm text-emerald-300">
                 {created.tempPassword}
               </code>
               <button
                 type="button"
                 onClick={handleCopy}
-                className="shrink-0 rounded-md border border-blue-300 p-2 hover:bg-blue-100 transition"
+                className="btn-secondary shrink-0 p-2"
                 aria-label="Copy password"
               >
-                {copied ? <Check size={16} className="text-emerald-600" /> : <Copy size={16} className="text-blue-600" />}
+                {copied ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} className="text-indigo-300" />}
               </button>
             </div>
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={onSuccess}
-          className="w-full rounded-md bg-blue-700 text-white text-sm font-medium py-2.5 hover:bg-blue-600"
-        >
+        <button type="button" onClick={onSuccess} className="btn-primary w-full py-2.5">
           Done
         </button>
       </div>
@@ -99,45 +95,34 @@ export default function AddUser({ onSuccess, onCancel }: AddUserProps) {
 
   // --- Stage 1: the input form ---
   return (
-    <form onSubmit={handleSubmit} className="p-8 space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-5 p-8">
       <div>
-        <h1 className="text-lg font-semibold text-slate-900">Add a user</h1>
-        <p className="text-sm text-slate-500 mt-1">Creates a new Finance or Agent login for your company.</p>
+        <h1 className="text-lg font-semibold text-slate-100">Add a user</h1>
+        <p className="mt-1 text-sm text-slate-400">Creates a new Finance or Agent login for your company.</p>
       </div>
 
       {error && (
-        <div role="alert" className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+        <div role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
           {error}
         </div>
       )}
 
       <div className="space-y-1">
-        <label className="text-sm font-medium text-slate-700">Full name</label>
-        <input
-          required
-          value={fullName}
-          onChange={(e) => setFullName(e.target.value)}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-        />
+        <label className="label">Full name</label>
+        <input required value={fullName} onChange={(e) => setFullName(e.target.value)} className="input w-full" />
       </div>
 
       <div className="space-y-1">
-        <label className="text-sm font-medium text-slate-700">Email</label>
-        <input
-          type="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-        />
+        <label className="label">Email</label>
+        <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="input w-full" />
       </div>
 
       <div className="space-y-1">
-        <label className="text-sm font-medium text-slate-700">Role</label>
+        <label className="label">Role</label>
         <select
           value={role}
           onChange={(e) => setRole(e.target.value as typeof role)}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="input w-full [&>option]:bg-slate-900 [&>option]:text-white"
         >
           <option value="FINANCE">Finance Admin</option>
           <option value="AGENT">Agent</option>
@@ -146,31 +131,23 @@ export default function AddUser({ onSuccess, onCancel }: AddUserProps) {
 
       {role === 'AGENT' && (
         <div className="space-y-1">
-          <label className="text-sm font-medium text-slate-700">Agent code</label>
+          <label className="label">Agent code</label>
           <input
             required
             value={agentCode}
             onChange={(e) => setAgentCode(e.target.value)}
             placeholder="e.g. AG-004"
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="input w-full"
           />
-          <p className="text-xs text-slate-400">Must match an existing agent record in this company.</p>
+          <p className="text-xs text-slate-500">Must match an existing agent record in this company.</p>
         </div>
       )}
 
       <div className="flex gap-3">
-        <button
-          type="submit"
-          disabled={loading}
-          className="flex-1 rounded-md bg-blue-700 text-white text-sm font-medium py-2.5 disabled:opacity-50 hover:bg-blue-600"
-        >
+        <button type="submit" disabled={loading} className="btn-primary flex-1 py-2.5">
           {loading ? 'Adding…' : 'Add user'}
         </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="rounded-md border border-slate-300 text-slate-600 text-sm font-medium px-4 py-2.5 hover:bg-slate-50"
-        >
+        <button type="button" onClick={onCancel} className="btn-secondary px-4 py-2.5">
           Cancel
         </button>
       </div>

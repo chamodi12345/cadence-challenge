@@ -29,33 +29,28 @@ export default function EditUser({ user, onSuccess, onCancel }: EditUserProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="p-8 space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-5 p-8">
       <div>
-        <h1 className="text-lg font-semibold text-slate-900">Edit user</h1>
+        <h1 className="text-lg font-semibold text-slate-100">Edit user</h1>
       </div>
 
       {error && (
-        <div role="alert" className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+        <div role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
           {error}
         </div>
       )}
 
       <div className="space-y-1">
-        <label className="text-sm font-medium text-slate-700">Full name</label>
-        <input
-          required
-          value={fullName}
-          onChange={(e) => setFullName(e.target.value)}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-        />
+        <label className="label">Full name</label>
+        <input required value={fullName} onChange={(e) => setFullName(e.target.value)} className="input w-full" />
       </div>
 
       <div className="space-y-1">
-        <label className="text-sm font-medium text-slate-700">Role</label>
+        <label className="label">Role</label>
         <select
           value={role}
           onChange={(e) => setRole(e.target.value as typeof role)}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="input w-full [&>option]:bg-slate-900 [&>option]:text-white"
         >
           <option value="FINANCE">Finance Admin</option>
           <option value="AGENT">Agent</option>
@@ -63,18 +58,10 @@ export default function EditUser({ user, onSuccess, onCancel }: EditUserProps) {
       </div>
 
       <div className="flex gap-3">
-        <button
-          type="submit"
-          disabled={loading}
-          className="flex-1 rounded-md bg-blue-700 text-white text-sm font-medium py-2.5 disabled:opacity-50 hover:bg-blue-600"
-        >
+        <button type="submit" disabled={loading} className="btn-primary flex-1 py-2.5">
           {loading ? 'Saving…' : 'Save changes'}
         </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="rounded-md border border-slate-300 text-slate-600 text-sm font-medium px-4 py-2.5 hover:bg-slate-50"
-        >
+        <button type="button" onClick={onCancel} className="btn-secondary px-4 py-2.5">
           Cancel
         </button>
       </div>

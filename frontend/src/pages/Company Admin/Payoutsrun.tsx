@@ -86,95 +86,86 @@ export default function PayoutRuns() {
   }
 
   return (
-    <div className="min-h-screen bg-blue-950">
-      <div className="w-full max-w-screen-2xl mx-auto px-6 sm:px-8 lg:px-10 py-8 space-y-6">
+    <div className="min-h-screen">
+      <div className="mx-auto w-full max-w-screen-2xl space-y-6 px-6 py-8 sm:px-8 lg:px-10">
         <div>
-          <h2 className="text-xs font-semibold text-blue-300 uppercase tracking-wider">
-            Payout Runs
-          </h2>
-          <p className="text-sm text-blue-200 mt-1">
+          <h2 className="page-title">Payout Runs</h2>
+          <p className="page-subtitle">
             Generate a monthly commission run. Draft runs can be regenerated freely; a
             finalised run is a locked financial record.
           </p>
         </div>
 
-        <form
-          onSubmit={handleGenerate}
-          className="bg-white border border-blue-800 rounded-xl p-5 flex items-end gap-3"
-        >
+        <form onSubmit={handleGenerate} className="card flex items-end gap-3 p-5">
           <div className="space-y-1">
-            <label className="text-sm font-medium text-slate-700">Period</label>
+            <label className="label">Period</label>
             <input
               required
               type="month"
               value={period}
               onChange={(e) => setPeriod(e.target.value)}
-              className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="input"
             />
           </div>
-          <button
-            type="submit"
-            disabled={generating}
-            className="rounded-md bg-blue-700 text-white text-sm font-medium px-4 py-2 disabled:opacity-50 hover:bg-blue-600 transition"
-          >
+          <button type="submit" disabled={generating} className="btn-primary px-4">
             {generating ? 'Generating…' : 'Generate / regenerate run'}
           </button>
         </form>
         {genError && (
-          <div role="alert" className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+          <div role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
             {genError}
           </div>
         )}
 
-        {state === 'loading' && <p className="text-sm text-blue-200">Loading runs…</p>}
+        {state === 'loading' && <p className="text-sm text-slate-400">Loading runs…</p>}
         {state === 'error' && (
-          <div role="alert" className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+          <div role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
             {error}
           </div>
         )}
 
         {state === 'ready' && runs.length === 0 && (
-          <div className="text-sm text-blue-200 py-8 text-center border border-dashed border-blue-800 rounded-xl">
+          <div className="rounded-xl border border-dashed border-white/10 py-8 text-center text-sm text-slate-400">
             No payout runs yet. Generate one above.
           </div>
         )}
 
         {state === 'ready' && runs.length > 0 && (
-          <div className="bg-white border border-blue-800 rounded-xl overflow-hidden divide-y divide-slate-100">
+          <div className="card divide-y divide-white/5 overflow-hidden">
             {runs.map((r) => (
               <button
                 key={r.id}
                 onClick={() => openRun(r.id)}
-                className="w-full flex items-center justify-between px-5 py-3 text-left hover:bg-slate-50 transition"
+                className="flex w-full items-center justify-between px-5 py-3 text-left transition hover:bg-white/5"
               >
                 <div>
-                  <p className="text-sm font-medium text-slate-900">
+                  <p className="text-sm font-medium text-slate-100">
                     {r.periodStart} – {r.periodEnd}
                   </p>
                   <span
-                    className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                      r.status === 'FINALISED' ? 'bg-slate-100 text-slate-500' : 'bg-amber-50 text-amber-700'
+                    className={`badge ${
+                      r.status === 'FINALISED' ? 'bg-slate-500/20 text-slate-300' : 'bg-amber-500/20 text-amber-300'
                     }`}
                   >
                     {r.status}
                   </span>
                 </div>
-                <p className="text-sm text-slate-700">Rs {Number(r.totalCommission).toLocaleString()}</p>
+                <p className="text-sm text-slate-300">Rs {Number(r.totalCommission).toLocaleString()}</p>
               </button>
             ))}
           </div>
         )}
 
         {selected && (
-          <div className="bg-white border border-blue-800 rounded-xl p-5 space-y-4">
+          <div className="card space-y-4 p-5">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-medium text-slate-900">
+                <h3 className="font-medium text-slate-100">
                   {selected.periodStart} – {selected.periodEnd}
                 </h3>
                 <span
-                  className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                    selected.status === 'FINALISED' ? 'bg-slate-100 text-slate-500' : 'bg-amber-50 text-amber-700'
+                  className={`badge ${
+                    selected.status === 'FINALISED' ? 'bg-slate-500/20 text-slate-300' : 'bg-amber-500/20 text-amber-300'
                   }`}
                 >
                   {selected.status}
@@ -183,7 +174,7 @@ export default function PayoutRuns() {
               {selected.status === 'DRAFT' && (
                 <button
                   onClick={() => handleFinalize(selected.id)}
-                  className="rounded-md bg-emerald-600 text-white text-sm font-medium px-4 py-2 hover:bg-emerald-700 transition"
+                  className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-emerald-950/50 transition hover:from-emerald-400 hover:to-teal-400"
                 >
                   Finalise run
                 </button>
@@ -192,33 +183,33 @@ export default function PayoutRuns() {
 
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-100 text-left text-slate-400">
-                  <th className="font-medium pb-2">Agent</th>
-                  <th className="font-medium pb-2">Bookings</th>
-                  <th className="font-medium pb-2">Gross volume</th>
-                  <th className="font-medium pb-2">Rate(s)</th>
-                  <th className="font-medium pb-2 text-right">Commission</th>
+                <tr className="border-b border-white/10 text-left text-slate-400">
+                  <th className="pb-2 font-medium">Agent</th>
+                  <th className="pb-2 font-medium">Bookings</th>
+                  <th className="pb-2 font-medium">Gross volume</th>
+                  <th className="pb-2 font-medium">Rate(s)</th>
+                  <th className="pb-2 text-right font-medium">Commission</th>
                 </tr>
               </thead>
               <tbody>
                 {selected.lineItems.map((li) => (
-                  <tr key={li.id} className="border-b border-slate-50 last:border-0">
-                    <td className="py-1.5 text-slate-900">{li.agentCode}</td>
-                    <td className="py-1.5 text-slate-500">{li.bookingCount}</td>
-                    <td className="py-1.5 text-slate-500">Rs {Number(li.grossVolume).toLocaleString()}</td>
-                    <td className="py-1.5 text-slate-400 text-xs">{li.ratesApplied}</td>
-                    <td className="py-1.5 text-slate-900 text-right font-medium">
+                  <tr key={li.id} className="border-b border-white/5 last:border-0">
+                    <td className="py-1.5 text-slate-100">{li.agentCode}</td>
+                    <td className="py-1.5 text-slate-400">{li.bookingCount}</td>
+                    <td className="py-1.5 text-slate-400">Rs {Number(li.grossVolume).toLocaleString()}</td>
+                    <td className="py-1.5 text-xs text-slate-500">{li.ratesApplied}</td>
+                    <td className="py-1.5 text-right font-medium text-slate-100">
                       Rs {Number(li.commissionAmount).toLocaleString()}
                     </td>
                   </tr>
                 ))}
               </tbody>
               <tfoot>
-                <tr className="border-t border-slate-200">
-                  <td colSpan={4} className="pt-2 text-sm font-medium text-slate-700">
+                <tr className="border-t border-white/10">
+                  <td colSpan={4} className="pt-2 text-sm font-medium text-slate-300">
                     Total
                   </td>
-                  <td className="pt-2 text-sm font-semibold text-slate-900 text-right">
+                  <td className="pt-2 text-right text-sm font-semibold text-slate-100">
                     Rs {Number(selected.totalCommission).toLocaleString()}
                   </td>
                 </tr>

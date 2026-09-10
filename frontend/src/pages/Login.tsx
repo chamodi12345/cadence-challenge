@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Activity, Mail, Lock } from 'lucide-react';
 import { apiPost, ApiError } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { roleHomePath } from '../lib/roles';
@@ -33,50 +34,62 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-blue-950">
-      <form onSubmit={handleSubmit} className="w-full max-w-sm bg-white rounded-xl shadow-sm border border-slate-200 p-8 space-y-5">
-        <div>
-          <h1 className="text-xl font-semibold text-slate-900">Sign in to Cadence</h1>
-          <p className="text-sm text-slate-500 mt-1">Enter your account credentials.</p>
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4">
+      <div className="pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full bg-indigo-600/30 blur-[120px]" />
+      <div className="pointer-events-none absolute -right-24 -bottom-40 h-[28rem] w-[28rem] rounded-full bg-violet-600/25 blur-[130px]" />
+      <div className="pointer-events-none absolute left-2/3 top-1/3 h-72 w-72 rounded-full bg-sky-500/20 blur-[100px]" />
+
+      <form
+        onSubmit={handleSubmit}
+        className="card relative w-full max-w-sm space-y-5 p-8"
+      >
+        <div className="flex flex-col items-center text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 via-blue-500 to-violet-500 shadow-lg shadow-indigo-950/50">
+            <Activity size={24} className="text-white" />
+          </div>
+          <h1 className="mt-4 text-xl font-semibold text-white">Sign in to Cadence</h1>
+          <p className="mt-1 text-sm text-slate-400">Enter your account credentials.</p>
         </div>
 
         {error && (
-          <div role="alert" className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+          <div role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
             {error}
           </div>
         )}
 
         <div className="space-y-1">
-          <label htmlFor="email" className="text-sm font-medium text-slate-700">Email</label>
-          <input
-            id="email"
-            type="email"
-            required
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+          <label htmlFor="email" className="label">Email</label>
+          <div className="relative">
+            <Mail size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+            <input
+              id="email"
+              type="email"
+              required
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="input w-full pl-9"
+            />
+          </div>
         </div>
 
         <div className="space-y-1">
-          <label htmlFor="password" className="text-sm font-medium text-slate-700">Password</label>
-          <input
-            id="password"
-            type="password"
-            required
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+          <label htmlFor="password" className="label">Password</label>
+          <div className="relative">
+            <Lock size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+            <input
+              id="password"
+              type="password"
+              required
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="input w-full pl-9"
+            />
+          </div>
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full rounded-md bg-blue-700 text-white text-sm font-medium py-2.5 disabled:opacity-50 hover:bg-blue-600"
-        >
+        <button type="submit" disabled={loading} className="btn-primary w-full py-2.5">
           {loading ? 'Signing in…' : 'Sign in'}
         </button>
       </form>

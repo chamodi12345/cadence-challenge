@@ -1,16 +1,14 @@
 // src/pages/Company Admin/CompanyAdminDashboard.tsx
-import { Users, UploadCloud, SlidersHorizontal, Wallet } from 'lucide-react';
+import { Users, UploadCloud, SlidersHorizontal, Wallet, ShieldCheck } from 'lucide-react';
 import { DashboardCard } from '../../components/DashboardCard';
 
 export default function CompanyAdminDashboard() {
   return (
-    <div className="min-h-screen bg-blue-950">
-      <div className="w-full max-w-screen-2xl mx-auto px-6 sm:px-8 lg:px-10 py-8 space-y-6">
+    <div className="min-h-screen">
+      <div className="mx-auto w-full max-w-screen-2xl space-y-6 px-6 py-8 sm:px-8 lg:px-10">
         <div>
-          <h2 className="text-xs font-semibold text-blue-300 uppercase tracking-wider">
-            Company Admin
-          </h2>
-          <p className="text-sm text-blue-200 mt-1">
+          <h2 className="page-title">Company Admin</h2>
+          <p className="page-subtitle">
             Manage your team, bookings, and monthly payouts.
           </p>
         </div>
@@ -24,11 +22,11 @@ export default function CompanyAdminDashboard() {
             accent="indigo"
           />
           <DashboardCard
-          title="Teams"
-          description="Assign team leads and manage overrides."
-          to="/dashboard/teams"
-          icon={Users}
-          accent="indigo"
+            title="Teams"
+            description="Assign team leads and manage overrides."
+            to="/dashboard/teams"
+            icon={ShieldCheck}
+            accent="indigo"
           />
           <DashboardCard
             title="Import bookings"

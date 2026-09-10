@@ -1,6 +1,6 @@
-import { randomUUID } from 'node:crypto';
 import { pool } from '../db/pool';
 import type { CreateRuleSetInput, UpdateRuleSetInput } from './rules.schema';
+import { randomUUID } from 'node:crypto';
 
 export class HttpError extends Error {
   constructor(public status: number, message: string) {
@@ -108,7 +108,7 @@ export async function createRuleSet(
     );
     const ruleSet = rows[0];
 
-      for (const tier of input.tiers) {
+    for (const tier of input.tiers) {
       await client.query(
         `INSERT INTO commission_tiers (id, rule_set_id, min_volume, max_volume, rate)
          VALUES ($1, $2, $3, $4, $5)`,
@@ -116,7 +116,7 @@ export async function createRuleSet(
       );
     }
 
-        for (const override of input.productOverrides) {
+    for (const override of input.productOverrides) {
       await client.query(
         `INSERT INTO commission_product_overrides (id, rule_set_id, product_code, rate)
          VALUES ($1, $2, $3, $4)`,
@@ -166,22 +166,22 @@ export async function updateRuleSet(
 
     if (input.tiers !== undefined) {
       await client.query('DELETE FROM commission_tiers WHERE rule_set_id = $1', [id]);
-            for (const tier of input.tiers) {
+      for (const tier of input.tiers) {
         await client.query(
-          `INSERT INTO commission_tiers (id, rule_set_id, min_volume, max_volume, rate)
-           VALUES ($1, $2, $3, $4, $5)`,
-          [randomUUID(), id, tier.minVolume, tier.maxVolume, tier.rate],
+          `INSERT INTO commission_tiers (rule_set_id, min_volume, max_volume, rate)
+           VALUES ($1, $2, $3, $4)`,
+          [id, tier.minVolume, tier.maxVolume, tier.rate],
         );
       }
     }
 
     if (input.productOverrides !== undefined) {
       await client.query('DELETE FROM commission_product_overrides WHERE rule_set_id = $1', [id]);
-            for (const override of input.productOverrides) {
+      for (const override of input.productOverrides) {
         await client.query(
-          `INSERT INTO commission_product_overrides (id, rule_set_id, product_code, rate)
-           VALUES ($1, $2, $3, $4)`,
-          [randomUUID(), id, override.productCode, override.rate],
+          `INSERT INTO commission_product_overrides (rule_set_id, product_code, rate)
+           VALUES ($1, $2, $3)`,
+          [id, override.productCode, override.rate],
         );
       }
     }
