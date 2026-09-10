@@ -7,7 +7,7 @@ import { rulesRouter } from './rules/rules.routes';
 
 import { payoutsRouter } from './payouts/payouts.routes';
 import { statementsRouter } from './statements/statements.routes';
-import { bookingsRouter } from './bookings/bookings.routes';
+import { bookingsRouter } from './bookings/bookings.routes'
 import { teamsRouter } from './teams/teams.routes';
 
 
