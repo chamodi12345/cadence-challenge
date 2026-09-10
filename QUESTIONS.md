@@ -11,7 +11,7 @@ own assumption).
 ## Q1 — Finance user across multiple companies
 
 **Date asked:** 2026-08-12
-**Status:** OPEN
+**Status:**     CLOSED
 **Question:** Can the same Finance user manage multiple companies? For example, can one Finance user have access to both Company A and Company B, or must each Finance user belong to exactly one company?
 
 **Why it matters / what it blocks:** This affects the user/company relationship and tenant-isolation design. If a Finance user can manage multiple companies, the authentication and authorization model must determine which company the user is currently accessing.
@@ -27,7 +27,7 @@ own assumption).
 ## Q2 — Commission rules across companies
 
 **Date asked:** 2026-08-12
-**Status:** OPEN
+**Status:** CLOSED
 **Question:** Do all companies use the same commission rules and commission tiers, or can each company define and manage its own commission rules?
 
 **Why it matters / what it blocks:** This affects the data model and commission-rule design. If each company can have different rules, commission rules must be associated with a specific company. If all companies share the same rules, the rules could potentially be managed globally.
@@ -42,7 +42,7 @@ own assumption).
 ## Q3 — Refund after payout finalisation
 
 **Date asked:** 2026-08-12
-**Status:** OPEN
+**Status:** CLOSED
 
 **Question:** What happens to the commission on a booking that is refunded after its payout run has been finalised?
 
@@ -62,7 +62,7 @@ For example, if an agent was overpaid 4,500 LKR in the previous month, the next 
 ## Q4 — Backend and frontend development order
 
 **Date asked:** 2026-08-12
-**Status:** OPEN
+**Status:** CLOSED
 
 **Question:** Should we prioritize building the backend/API first and then build the React frontend, or are we expected to develop the backend and frontend together during the challenge?
 
@@ -78,7 +78,7 @@ For example, if an agent was overpaid 4,500 LKR in the previous month, the next 
 ## Q5 — Docker performance issue
 
 **Date asked:** 2026-08-12
-**Status:** OPEN
+**Status:** CLOSED
 
 **Question:** After starting the Docker database container, my laptop becomes noticeably slow/stuck. Is there any recommended Docker configuration or resource setting for this challenge?
 
@@ -94,7 +94,7 @@ For example, if an agent was overpaid 4,500 LKR in the previous month, the next 
 ## Q6 — Legacy module defect investigation
 
 **Date asked:** 2026-08-12
-**Status:** OPEN
+**Status:** CLOSED
 
 **Question:** For the existing `legacy/` reporting module, should we only identify and fix the required three real defects, or are we expected to review the entire module and identify any additional issues we find? Also, should the existing module's current behaviour be preserved wherever it is not directly related to a confirmed defect?
 
@@ -109,7 +109,7 @@ For example, if an agent was overpaid 4,500 LKR in the previous month, the next 
 ## Q7 — Database isolation between companies
 
 **Date asked:** 2026-08-12
-**Status:** OPEN
+**Status:** CLOSED
 
 **Question:** Should each company have its own separate database, or should all companies share the same PostgreSQL database with their data isolated using `company_id` and server-side tenant scoping?
 
@@ -126,7 +126,7 @@ For example, if an agent was overpaid 4,500 LKR in the previous month, the next 
 ## Q8 — User registration
 
 **Date asked:** 2026-08-12
-**Status:** OPEN
+**Status:** CLOSED
 
 **Question:** Should users be able to register themselves through the
 application, with the role selected during registration, or should
@@ -180,3 +180,30 @@ I would adjust the role permissions and user-management flow accordingly.
 
 
 
+## Q11 — PostgreSQL Database and Docker Setup
+
+### Clarification requested
+
+@mentor-username, I would like to clarify the expected PostgreSQL database setup for the Cadence challenge.
+
+I am currently using PostgreSQL through the provided Docker setup and can connect to the database using the provided credentials through pgAdmin.
+
+When I start Docker Desktop and run `docker ps`, the PostgreSQL container appears to be running. However, the container does not appear in the Docker Desktop container list.
+
+Could you please confirm:
+
+1. Is the PostgreSQL database expected to run through Docker Desktop?
+2. Is it normal for the container to appear in `docker ps` but not appear in the Docker Desktop UI?
+3. Should I continue using the provided PostgreSQL credentials to connect through pgAdmin?
+
+### Why it matters
+
+This affects my local development environment, PostgreSQL connection configuration, Docker setup, and how I should run and test the backend.
+
+### Current assumption
+
+I will continue using the PostgreSQL container provided in the Docker setup as my local database environment. The container is currently running successfully, as confirmed by the `docker ps` command.
+
+### Impact if incorrect
+
+If the Docker/PostgreSQL setup I am currently using is not the expected configuration, I will update my database and Docker setup according to the recommended project configuration.
