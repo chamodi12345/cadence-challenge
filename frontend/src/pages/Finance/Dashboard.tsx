@@ -9,13 +9,11 @@ export default function FinanceDashboard() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-blue-950">
-      <div className="w-full max-w-screen-2xl mx-auto px-6 sm:px-8 lg:px-10 py-8 space-y-6">
+    <div className="min-h-screen">
+      <div className="mx-auto w-full max-w-screen-2xl space-y-6 px-6 py-8 sm:px-8 lg:px-10">
         <div>
-          <h2 className="text-xs font-semibold text-blue-300 uppercase tracking-wider">
-            {ROLE_LABELS[user.role]}
-          </h2>
-          <p className="text-sm text-blue-200 mt-1">
+          <h2 className="page-title">{ROLE_LABELS[user.role]}</h2>
+          <p className="page-subtitle">
             Manage bookings, commission rules, and payouts for {user.companyId}.
           </p>
         </div>

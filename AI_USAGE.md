@@ -3,17 +3,16 @@
 AI tools are allowed and expected. This log is not a confession — it is documentation of
 how you worked. Declared use costs you nothing.
 
-What we actually read is the last column: what you changed about the output, and why.
-"Accepted as-is" is a valid answer for a config file and a worrying one for the
-commission calculator.
 
 | Date | Tool | Where | What I asked for | What I changed and why |
 | ---- | ---- | ----- | ---------------- | ---------------------- |
-| | | | | |
-
-## Anything AI got wrong
-
-Cases where the generated output was subtly incorrect and you caught it. This section is
-worth marks.
-
-## Anything I chose not to use AI for, and why
+| 12 Aug | Claude (chat) | Project planning, data model | Help understanding the assignment brief and planning the data model | Read the brief myself first; used Claude to talk through the schema before writing any code |
+| 13 Aug | Claude (chat) | `Login.tsx`, `AuthContext`, Manage Users | Implement login, Manage Users, and debug why the forced first-login password-change redirect wasn't working | Debugged the redirect myself by checking the actual JWT payload in the browser; found the real cause was my own seed data (`mustChangePassword: false`), not a code bug. Identified the "temp password must actually be temporary" requirement myself, independently |
+| 14 Aug | Claude (chat) | `create-company.ts`, `companies.id` | Help tracking down the first-login flow bug | Traced the issue to `companies.id` having no default ID generator myself. Accepted the proposed fix of `DEFAULT gen_random_uuid()::text`. Also independently spotted that `Math.random()` was being used in the temporary-password code and flagged it as insecure before asking for a fix. |
+| 15–16 Aug | Claude (chat) | `rules.service.ts`, `CommissionRules.tsx` | Build Commission Rules — rule set/tier/effective-dating model, create/list/delete API, and the frontend form | Decided the effective-dating policy myself (rule set locks once live; changing rates means creating a new one) before asking for implementation. Found and fixed a real bug myself: a `min` date restriction was blocking a company's very first rule set from being dated in the past — traced it to being meant for edits, not creation, and removed it |
+| 17–19 Aug (10:30–15:00) | — | — | Not worked on Cadence — reassigned to another task | — |
+| 19 Aug | Claude (chat) | `users.service.ts`, `db/schema.sql`, `create-company.ts` | Implement `crypto.randomBytes` properly for temp passwords; help correcting the `companies.id` fix | Verified myself that the temp password is bcrypt-hashed and never logged in plaintext, and added a 7-day `password_reset_required_by` expiry myself. On `companies.id`: traced the actual bug myself — the application, not the database, was meant to generate the id — reverted the 14th's DB-default fix, made `create-company.ts` generate it explicitly, and audited the rest of the schema myself, finding the same issue in `users.id` |
+| 20 Aug | Claude (chat) | `tests/create-company.test.ts` | Regression test for the `companies.id` fix | Diagnosed and fixed several real failures myself by actually running the test: missing `DATABASE_URL`, a foreign-key ordering bug on cleanup, a duplicate-email error from a failed cleanup, and a timeout too short for a real subprocess call |
+| 20 Aug | Claude (chat) | `auth.service.test.ts`, `auth.middleware.test.ts` | Unit tests for the auth layer (13 tests: login, JWT validation, role checks) | Rejected Claude's first fix for a `JWT_SECRET` failure (setting the env var above a static `import` — doesn't work, since imports are hoisted). Ran the tests, confirmed the failure myself, and only accepted the corrected fix (dynamic `import()` in `beforeAll`) after verifying it actually passed |
+| 20 Aug | Claude (chat) | `payouts.service.ts`, `src/teams/` | Implement the team-lead 1% override | Made the design decisions myself before requesting code: override applies once per team led, calculated on other members' volume only (not the lead's own, to avoid double-counting), not effective-dated. Tested a lead managing two teams simultaneously myself — not explicitly requested — to confirm overrides stack correctly |
+| 20 Aug | Claude (chat) | Agent Dashboard, `AgentStatement.tsx` | Fix frontend styling/theme consistency | Reviewed the result visually myself and confirmed it matched the rest of the app before accepting |

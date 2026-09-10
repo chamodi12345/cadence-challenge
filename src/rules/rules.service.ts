@@ -1,5 +1,6 @@
 import { pool } from '../db/pool';
 import type { CreateRuleSetInput, UpdateRuleSetInput } from './rules.schema';
+import { randomUUID } from 'node:crypto';
 
 export class HttpError extends Error {
   constructor(public status: number, message: string) {
@@ -97,28 +98,29 @@ export async function createRuleSet(
   try {
     await client.query('BEGIN');
 
+    const ruleSetId = randomUUID();
     const { rows } = await client.query(
-      `INSERT INTO commission_rule_sets (company_id, label, effective_from)
-       VALUES ($1, $2, $3)
+      `INSERT INTO commission_rule_sets (id, company_id, label, effective_from)
+       VALUES ($1, $2, $3, $4)
        RETURNING id, company_id AS "companyId", label, effective_from AS "effectiveFrom",
                  created_at AS "createdAt"`,
-      [companyId, input.label, input.effectiveFrom],
+      [ruleSetId, companyId, input.label, input.effectiveFrom],
     );
     const ruleSet = rows[0];
 
     for (const tier of input.tiers) {
       await client.query(
-        `INSERT INTO commission_tiers (rule_set_id, min_volume, max_volume, rate)
-         VALUES ($1, $2, $3, $4)`,
-        [ruleSet.id, tier.minVolume, tier.maxVolume, tier.rate],
+        `INSERT INTO commission_tiers (id, rule_set_id, min_volume, max_volume, rate)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [randomUUID(), ruleSet.id, tier.minVolume, tier.maxVolume, tier.rate],
       );
     }
 
     for (const override of input.productOverrides) {
       await client.query(
-        `INSERT INTO commission_product_overrides (rule_set_id, product_code, rate)
-         VALUES ($1, $2, $3)`,
-        [ruleSet.id, override.productCode, override.rate],
+        `INSERT INTO commission_product_overrides (id, rule_set_id, product_code, rate)
+         VALUES ($1, $2, $3, $4)`,
+        [randomUUID(), ruleSet.id, override.productCode, override.rate],
       );
     }
 
