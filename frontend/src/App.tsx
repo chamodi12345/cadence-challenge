@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import DashboardLayout from './components/DashboardLayout';
 import Login from './pages/Login';
 import CompanyAdminDashboard from './pages/Company Admin/CompanyAdminDashboard';
 import ChangePassword from './pages/ChangePassword';
@@ -27,6 +28,14 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }return <>{children}</>;
 }
 
+function ProtectedPage({ children }: { children: React.ReactNode }) {
+  return (
+    <ProtectedRoute>
+      <DashboardLayout>{children}</DashboardLayout>
+    </ProtectedRoute>
+  );
+}
+
 
 
 export default function App() {
@@ -38,44 +47,44 @@ export default function App() {
           <Route
             path="/dashboard"
             element={
-              <ProtectedRoute>
+              <ProtectedPage>
                 <CompanyAdminDashboard />
-              </ProtectedRoute>
+              </ProtectedPage>
             }
           />
           <Route path="*" element={<Navigate to="/login" replace />} />
-          <Route path="/change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
-          <Route path="/dashboard/rules" element={<ProtectedRoute><CommissionRules /></ProtectedRoute>} />
-          <Route path="/dashboard/import" element={<ProtectedRoute><ImportBookings /></ProtectedRoute>} />
-          <Route path="/statement" element={<ProtectedRoute><AgentStatement /></ProtectedRoute>} />
-          <Route path="/dashboard/payouts" element={<ProtectedRoute><PayoutsRun /></ProtectedRoute>} />
-          <Route path="/dashboard/teams" element={<ProtectedRoute><Teams /></ProtectedRoute>} />
+          <Route path="/change-password" element={<ProtectedPage><ChangePassword /></ProtectedPage>} />
+          <Route path="/dashboard/rules" element={<ProtectedPage><CommissionRules /></ProtectedPage>} />
+          <Route path="/dashboard/import" element={<ProtectedPage><ImportBookings /></ProtectedPage>} />
+          <Route path="/statement" element={<ProtectedPage><AgentStatement /></ProtectedPage>} />
+          <Route path="/dashboard/payouts" element={<ProtectedPage><PayoutsRun /></ProtectedPage>} />
+          <Route path="/dashboard/teams" element={<ProtectedPage><Teams /></ProtectedPage>} />
 
 
 
 <Route
   path="/finance"
   element={
-    <ProtectedRoute>
+    <ProtectedPage>
       <FinanceDashboard />
-    </ProtectedRoute>
+    </ProtectedPage>
   }
 />
 <Route
   path="/agent"
   element={
-    <ProtectedRoute>
+    <ProtectedPage>
       <AgentDashboard />
-    </ProtectedRoute>
+    </ProtectedPage>
   }
 />
 
           <Route
   path="/dashboard/users"
   element={
-    <ProtectedRoute>
+    <ProtectedPage>
       <UsersPage />
-    </ProtectedRoute>
+    </ProtectedPage>
   }
 />
         </Routes>
