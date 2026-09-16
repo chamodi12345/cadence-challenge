@@ -1,4 +1,5 @@
 -- db/schema.sql — reconciled: TEXT ids throughout, to match the fixed seed data
+DROP TABLE IF EXISTS refunds CASCADE;
 DROP TABLE IF EXISTS payout_line_items CASCADE;
 DROP TABLE IF EXISTS commission_product_overrides CASCADE;
 DROP TABLE IF EXISTS commission_tiers CASCADE;
@@ -70,6 +71,7 @@ CREATE TABLE payout_runs (
   period_start  DATE NOT NULL,
   period_end    DATE NOT NULL,
   status        TEXT NOT NULL DEFAULT 'DRAFT',
+  finalised_at  TIMESTAMPTZ,
   created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -120,6 +122,24 @@ CREATE TABLE teams (
   name        TEXT NOT NULL,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+CREATE TABLE refunds (
+  id             TEXT PRIMARY KEY,
+  company_id     TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  booking_id     TEXT NOT NULL REFERENCES bookings(id),
+  amount         NUMERIC(14, 2) NOT NULL CHECK (amount > 0),
+  refund_date    DATE NOT NULL,
+  reason         TEXT,
+  -- Once a clawback for this refund has been included in a payout run, this
+  -- records which run settled it so regeneration never double-charges it.
+  settled_run_id TEXT REFERENCES payout_runs(id),
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+  -- A booking can only be refunded once, so a double refund (which would
+  -- double the clawback) is impossible at the schema level.
+  CONSTRAINT refunds_booking_unique UNIQUE (booking_id)
+);
+
+CREATE INDEX refunds_company_date_idx ON refunds (company_id, refund_date);
 
 CREATE TABLE team_members (
   id       TEXT PRIMARY KEY,

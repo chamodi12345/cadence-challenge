@@ -1,8 +1,9 @@
 import Decimal from 'decimal.js';
 import { randomUUID } from 'node:crypto';
+import type { PoolClient } from 'pg';
 import { pool } from '../db/pool';
 import { calculateCommission } from './commission';
-import type { TierRow, OverrideRow } from './commission';
+import type { CommissionBooking, TierRow, OverrideRow } from './commission';
 import { HttpError } from '../lib/HttpError';
 
 export { HttpError };
@@ -88,6 +89,116 @@ async function resolveRuleSet(
   return { tiers, overrides };
 }
 
+interface ClawRefundRow {
+  refundId: string;
+  agentCode: string;
+  originalStart: string;
+}
+
+interface PeriodBookingRow {
+  id: string;
+  agentCode: string;
+  amount: string;
+  productCode: string;
+}
+
+function toCommissionInput(rows: PeriodBookingRow[]): CommissionBooking[] {
+  return rows.map(({ agentCode, amount, productCode }) => ({
+    agentCode,
+    amount,
+    productCode,
+  }));
+}
+
+/**
+ * Finds refunds whose booking fell in a FINALISED period *before* this run's
+ * period, recorded after the original run was finalised (`created_at >
+ * finalised_at`) — i.e. the commission on them has already been paid out.
+ * For each (original period, agent) it recomputes the original period's
+ * commission with and without the refunded bookings using that period's
+ * effective-dated rule set (stable — rule sets are effective-dated and a
+ * finalised run is immutable). The difference is the amount to claw back.
+ *
+ * Clawbacks are merged into THIS run as deductions; the finalised run is
+ * never mutated. Refunds are matched to their original run via
+ * `period_start = date_trunc('month', booking_date)`.
+ */
+async function computeClawbacks(
+  client: PoolClient,
+  companyId: string,
+  runId: string,
+  periodStart: string,
+): Promise<{ byAgent: Map<string, Decimal>; refundIds: string[] }> {
+  const { rows } = await client.query<ClawRefundRow>(
+    `SELECT r.id AS "refundId",
+            b.agent_code AS "agentCode",
+            to_char(date_trunc('month', b.booking_date)::date, 'YYYY-MM-DD') AS "originalStart"
+       FROM refunds r
+       JOIN bookings b ON b.id = r.booking_id
+       JOIN payout_runs pr
+         ON pr.company_id = b.company_id
+        AND pr.period_start = date_trunc('month', b.booking_date)::date
+        AND pr.status = 'FINALISED'
+        AND pr.finalised_at IS NOT NULL
+      WHERE r.company_id = $1
+        AND (r.settled_run_id IS NULL OR r.settled_run_id = $2)
+        AND r.created_at > pr.finalised_at
+        AND pr.period_start < $3
+     GROUP BY r.id, b.agent_code, b.booking_date`,
+    [companyId, runId, periodStart],
+  );
+  if (rows.length === 0) return { byAgent: new Map(), refundIds: [] };
+
+  const refundIds = rows.map((r) => r.refundId);
+
+  // Recompute each (original period, agent) once, then sum per agent.
+  const groups = new Map<string, { agentCode: string; start: string }>();
+  for (const row of rows) {
+    groups.set(`${row.originalStart}|${row.agentCode}`, {
+      agentCode: row.agentCode,
+      start: row.originalStart,
+    });
+  }
+
+  const byAgent = new Map<string, Decimal>();
+
+  for (const { agentCode, start: originalStart } of groups.values()) {
+    const originalPeriod = monthToRange(originalStart.slice(0, 7));
+    const { tiers, overrides } = await resolveRuleSet(companyId, originalPeriod.start);
+
+    const { rows: periodBookings } = await client.query<PeriodBookingRow>(
+      `SELECT b.id, b.agent_code AS "agentCode", b.amount, b.product_code AS "productCode"
+         FROM bookings b
+        WHERE b.company_id = $1 AND b.agent_code = $2
+          AND b.booking_date >= $3 AND b.booking_date <= $4`,
+      [companyId, agentCode, originalPeriod.start, originalPeriod.end],
+    );
+
+    const { rows: refundedRows } = await client.query<{ bookingId: string }>(
+      `SELECT r.booking_id AS "bookingId"
+         FROM refunds r
+         JOIN bookings b ON b.id = r.booking_id
+        WHERE r.company_id = $1 AND b.agent_code = $2
+          AND b.booking_date >= $3 AND b.booking_date <= $4
+          AND (r.settled_run_id IS NULL OR r.settled_run_id = $5)`,
+      [companyId, agentCode, originalPeriod.start, originalPeriod.end, runId],
+    );
+    const refundedIds = new Set(refundedRows.map((r) => r.bookingId));
+
+    const withoutRefunded = periodBookings.filter((b) => !refundedIds.has(b.id));
+
+    const withAll = calculateCommission(toCommissionInput(periodBookings), tiers, overrides);
+    const without = calculateCommission(toCommissionInput(withoutRefunded), tiers, overrides);
+    const clawback = new Decimal(withAll.find((i) => i.agentCode === agentCode)?.commissionAmount ?? '0')
+      .minus(without.find((i) => i.agentCode === agentCode)?.commissionAmount ?? '0');
+    if (clawback.isZero()) continue;
+
+    byAgent.set(agentCode, (byAgent.get(agentCode) ?? new Decimal(0)).plus(clawback));
+  }
+
+  return { byAgent, refundIds };
+}
+
 /**
  * Generates (or regenerates) a DRAFT run for a company + period. Regeneration
  * is only allowed while the run is DRAFT — a FINALISED run is immutable, so
@@ -111,7 +222,8 @@ export async function generatePayoutRun(companyId: string, period: string): Prom
   const { rows: bookings } = await pool.query<BookingRow>(
     `SELECT agent_code AS "agentCode", amount, product_code AS "productCode"
        FROM bookings
-      WHERE company_id = $1 AND booking_date >= $2 AND booking_date <= $3`,
+      WHERE company_id = $1 AND booking_date >= $2 AND booking_date <= $3
+        AND NOT EXISTS (SELECT 1 FROM refunds r WHERE r.booking_id = bookings.id)`,
     [companyId, start, end],
   );
 
@@ -223,6 +335,44 @@ export async function generatePayoutRun(companyId: string, period: string): Prom
       );
     }
 
+    // Refund clawbacks: money already paid on a FINALISED prior run for a
+    // refunded booking is recovered in this run as a deduction — the
+    // finalised run is never edited.
+    const { byAgent: clawbacks, refundIds } = await computeClawbacks(client, companyId, runId, start);
+    for (const [agentCode, clawback] of clawbacks) {
+      const agentId = agentIdByCode.get(agentCode);
+      if (!agentId) continue; // orphaned agent_code — same guard as above
+      const label = `refund clawback -Rs ${clawback.toString()}`;
+      const existingLine = lineItems.find((li) => li.agentId === agentId);
+      if (existingLine) {
+        existingLine.commissionAmount = new Decimal(existingLine.commissionAmount)
+          .minus(clawback)
+          .toDecimalPlaces(2)
+          .toString();
+        existingLine.ratesApplied += `; ${label}`;
+      } else {
+        lineItems.push({
+          agentId,
+          agentCode,
+          bookingCount: 0,
+          grossVolume: '0.00',
+          commissionAmount: clawback.negated().toDecimalPlaces(2).toString(),
+          ratesApplied: label,
+        });
+      }
+    }
+
+    // Settle the clawed-back refunds against this run. On regeneration of
+    // this same draft, computeClawbacks still matches (settled_run_id = this
+    // run), so the claw survives regeneration; any LATER run skips them, so
+    // a refund is clawed back exactly once.
+    if (refundIds.length > 0) {
+      await client.query('UPDATE refunds SET settled_run_id = $1 WHERE id = ANY($2::text[])', [
+        runId,
+        refundIds,
+      ]);
+    }
+
     for (const item of lineItems) {
       await client.query(
         `INSERT INTO payout_line_items
@@ -302,7 +452,7 @@ export async function listPayoutRuns(companyId: string): Promise<Omit<PayoutRun,
  */
 export async function finalizePayoutRun(companyId: string, runId: string): Promise<PayoutRun> {
   const result = await pool.query(
-    `UPDATE payout_runs SET status = 'FINALISED'
+    `UPDATE payout_runs SET status = 'FINALISED', finalised_at = now()
       WHERE id = $1 AND company_id = $2 AND status = 'DRAFT'`,
     [runId, companyId],
   );

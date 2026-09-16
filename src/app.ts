@@ -9,6 +9,7 @@ import { payoutsRouter } from './payouts/payouts.routes';
 import { statementsRouter } from './statements/statements.routes';
 import { bookingsRouter } from './bookings/bookings.routes'
 import { teamsRouter } from './teams/teams.routes';
+import { refundsRouter } from './refunds/refunds.routes';
 
 
 
@@ -25,5 +26,6 @@ export function createApp() {
 app.use('/statements', statementsRouter);
 app.use('/bookings', bookingsRouter);
 app.use('/teams', teamsRouter);
+app.use('/refunds', refundsRouter);
   return app;
 }
