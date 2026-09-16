@@ -1,25 +1,15 @@
 import Decimal from 'decimal.js';
 import { randomUUID } from 'node:crypto';
 import { pool } from '../db/pool';
+import { calculateCommission } from './commission';
+import type { TierRow, OverrideRow } from './commission';
+import { HttpError } from '../lib/HttpError';
 
-export class HttpError extends Error {
-  constructor(public status: number, message: string) {
-    super(message);
-  }
-}
+export { HttpError };
 
 interface RuleSetRow {
   id: string;
   effectiveFrom: string;
-}
-interface TierRow {
-  minVolume: string;
-  maxVolume: string | null;
-  rate: string;
-}
-interface OverrideRow {
-  productCode: string;
-  rate: string;
 }
 interface BookingRow {
   agentCode: string;
@@ -48,7 +38,6 @@ export interface PayoutRun {
 }
 
 function monthToRange(period: string): { start: string; end: string } {
-  // period is "YYYY-MM"
   const match = period.match(/^(\d{4})-(\d{2})$/);
   if (!match) throw new HttpError(400, 'period must be in YYYY-MM format');
   const year = Number(match[1]);
@@ -99,42 +88,25 @@ async function resolveRuleSet(
   return { tiers, overrides };
 }
 
-function tierRateFor(volume: Decimal, tiers: TierRow[]): Decimal {
-  for (const tier of tiers) {
-    const min = new Decimal(tier.minVolume);
-    const max = tier.maxVolume ? new Decimal(tier.maxVolume) : null;
-    if (volume.gte(min) && (max === null || volume.lte(max))) {
-      return new Decimal(tier.rate);
-    }
-  }
-  // Shouldn't happen if tiers are well-formed (open-ended top tier), but fail
-  // loudly rather than silently applying a 0% rate.
-  throw new HttpError(500, `No tier matches volume ${volume.toString()} — rule set is misconfigured`);
-}
-
 /**
  * Generates (or regenerates) a DRAFT run for a company + period. Regeneration
  * is only allowed while the run is DRAFT — a FINALISED run is immutable, so
  * this function refuses to touch one.
+ *
+ * Run-number and same-period safety: the company row is locked with
+ * `SELECT ... FOR UPDATE` inside the transaction, so two concurrent
+ * generatePayoutRun calls for the same company serialize — exactly one
+ * creates a new run row and the other reuses it (or 409s if finalised).
+ *
+ * run_no is computed as `MAX(run_no) + 1` (not COUNT+1). The original
+ * COUNT-based approach would collide if a run row were ever deleted,
+ * because COUNT shrinks but MAX stays — MAX+1 always produces a number
+ * strictly above any surviving run_no.
  */
 export async function generatePayoutRun(companyId: string, period: string): Promise<PayoutRun> {
   const { start, end } = monthToRange(period);
 
-  const { rows: existingRuns } = await pool.query<{ id: string; status: string }>(
-    `SELECT id, status FROM payout_runs
-      WHERE company_id = $1 AND period_start = $2 AND period_end = $3`,
-    [companyId, start, end],
-  );
-  const existing = existingRuns[0];
-  if (existing?.status === 'FINALISED') {
-    throw new HttpError(
-      409,
-      'A finalised run already exists for this period and cannot be regenerated. Finalised runs are immutable.',
-    );
-  }
-
   const { tiers, overrides } = await resolveRuleSet(companyId, start);
-  const overrideMap = new Map(overrides.map((o) => [o.productCode.toUpperCase(), new Decimal(o.rate)]));
 
   const { rows: bookings } = await pool.query<BookingRow>(
     `SELECT agent_code AS "agentCode", amount, product_code AS "productCode"
@@ -149,44 +121,14 @@ export async function generatePayoutRun(companyId: string, period: string): Prom
   );
   const agentIdByCode = new Map(agents.map((a) => [a.agentCode, a.id]));
 
-  // Group bookings by agent.
-  const byAgent = new Map<string, BookingRow[]>();
-  for (const b of bookings) {
-    const list = byAgent.get(b.agentCode) ?? [];
-    list.push(b);
-    byAgent.set(b.agentCode, list);
-  }
+  // Pure commission calculation (no side effects, fully unit-testable).
+  const commissionItems = calculateCommission(bookings, tiers, overrides);
 
   const lineItems: Omit<LineItem, 'id'>[] = [];
-  let runTotal = new Decimal(0);
-
-  for (const [agentCode, agentBookings] of byAgent) {
-    const grossVolume = agentBookings.reduce((sum, b) => sum.plus(b.amount), new Decimal(0));
-    const tierRate = tierRateFor(grossVolume, tiers);
-
-    let commission = new Decimal(0);
-    const ratesUsed = new Set<string>([`${tierRate.times(100).toString()}% tier`]);
-
-    for (const b of agentBookings) {
-      const productRate = overrideMap.get(b.productCode.toUpperCase());
-      const rate = productRate ?? tierRate;
-      if (productRate) ratesUsed.add(`${b.productCode} override ${productRate.times(100).toString()}%`);
-      commission = commission.plus(new Decimal(b.amount).times(rate));
-    }
-    commission = commission.toDecimalPlaces(2);
-    runTotal = runTotal.plus(commission);
-
-    const agentId = agentIdByCode.get(agentCode);
-    if (!agentId) continue; // orphaned agent_code shouldn't happen given import validates it, but guard anyway
-
-    lineItems.push({
-      agentId,
-      agentCode,
-      bookingCount: agentBookings.length,
-      grossVolume: grossVolume.toDecimalPlaces(2).toString(),
-      commissionAmount: commission.toString(),
-      ratesApplied: Array.from(ratesUsed).join('; '),
-    });
+  for (const item of commissionItems) {
+    const agentId = agentIdByCode.get(item.agentCode);
+    if (!agentId) continue; // orphaned agent_code — guarded by import validation
+    lineItems.push({ ...item, agentId });
   }
 
   // Team-lead override: 1% flat, per team led, on the OTHER members' volume
@@ -234,12 +176,31 @@ export async function generatePayoutRun(companyId: string, period: string): Prom
         ratesApplied: `team override 1% (Rs ${overrideAmount.toString()})`,
       });
     }
-    runTotal = runTotal.plus(overrideAmount);
   }
 
+  // --- persistence inside a transaction ------------------------------------
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+
+    // Serialise concurrent run generation and finalisation per company.
+    // Two concurrent calls either create one run (the second reuses the
+    // first's) or one sees FINALISED and 409s — never duplicates.
+    await client.query('SELECT id FROM companies WHERE id = $1 FOR UPDATE', [companyId]);
+
+    // Check for an existing run INSIDE the transaction after the lock.
+    const { rows: existingRuns } = await client.query<{ id: string; status: string }>(
+      `SELECT id, status FROM payout_runs
+        WHERE company_id = $1 AND period_start = $2 AND period_end = $3`,
+      [companyId, start, end],
+    );
+    const existing = existingRuns[0];
+    if (existing?.status === 'FINALISED') {
+      throw new HttpError(
+        409,
+        'A finalised run already exists for this period and cannot be regenerated. Finalised runs are immutable.',
+      );
+    }
 
     let runId: string;
     if (existing) {
@@ -247,11 +208,13 @@ export async function generatePayoutRun(companyId: string, period: string): Prom
       await client.query('DELETE FROM payout_line_items WHERE run_id = $1', [runId]);
       await client.query(`UPDATE payout_runs SET status = 'DRAFT' WHERE id = $1`, [runId]);
     } else {
-      const { rows: countRows } = await client.query<{ count: string }>(
-        'SELECT COUNT(*) FROM payout_runs WHERE company_id = $1',
+      // MAX(run_no)+1 under the company-row lock: no duplicate run_no is
+      // possible, and MAX is safe if earlier runs have been deleted.
+      const { rows: maxRows } = await client.query<{ next: string }>(
+        'SELECT COALESCE(MAX(run_no), 0) + 1 AS next FROM payout_runs WHERE company_id = $1',
         [companyId],
       );
-      const runNo = Number(countRows[0]?.count ?? '0') + 1;
+      const runNo = Number(maxRows[0]?.next ?? '1');
       runId = randomUUID();
       await client.query(
         `INSERT INTO payout_runs (id, company_id, run_no, period_start, period_end, status)
@@ -328,14 +291,27 @@ export async function listPayoutRuns(companyId: string): Promise<Omit<PayoutRun,
   return rows;
 }
 
+/**
+ * Finalises a payout run atomically.
+ *
+ * The conditional `UPDATE ... WHERE status = 'DRAFT'` ensures that exactly
+ * one of two concurrent finalise requests succeeds — Postgres acquires a
+ * row-level lock on the `payout_runs` row, so the second UPDATE re-evaluates
+ * the WHERE clause after the first commits, sees status = 'FINALISED', and
+ * touches zero rows (409).
+ */
 export async function finalizePayoutRun(companyId: string, runId: string): Promise<PayoutRun> {
-  const run = await getPayoutRun(companyId, runId);
-  if (run.status === 'FINALISED') {
-    throw new HttpError(409, 'This run is already finalised.');
+  const result = await pool.query(
+    `UPDATE payout_runs SET status = 'FINALISED'
+      WHERE id = $1 AND company_id = $2 AND status = 'DRAFT'`,
+    [runId, companyId],
+  );
+
+  if (result.rowCount === 0) {
+    // Distinguish 404 (no run) from 409 (already finalised).
+    await getPayoutRun(companyId, runId); // throws HttpError(404) if missing
+    throw new HttpError(409, 'This run is not in DRAFT status and cannot be finalised.');
   }
-  await pool.query(`UPDATE payout_runs SET status = 'FINALISED' WHERE id = $1 AND company_id = $2`, [
-    runId,
-    companyId,
-  ]);
+
   return getPayoutRun(companyId, runId);
 }
