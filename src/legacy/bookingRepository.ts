@@ -65,8 +65,9 @@ export async function findBookingsByAgentCode(
             product_code
        FROM bookings
       WHERE agent_code = $1
+        AND company_id = $2
       ORDER BY booking_date, external_ref`,
-    [agentCode],
+    [agentCode, companyId],
   );
 
   return result.rows;

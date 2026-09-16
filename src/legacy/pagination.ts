@@ -32,7 +32,7 @@ export function parsePageParams(query: Record<string, string | undefined>): Page
 }
 
 export function toOffset(params: PageParams): number {
-  return params.page * params.limit;
+  return (params.page - 1) * params.limit;
 }
 
 export function toPageMeta(params: PageParams, total: number): PageMeta {
