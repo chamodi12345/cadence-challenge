@@ -12,6 +12,7 @@ import ImportBookings from './pages/Company Admin/ImportBookings';
 import AgentStatement from './pages/Agent/AgentStatement';
 import PayoutsRun from './pages/Company Admin/Payoutsrun';
 import Teams from './pages/Company Admin/Teams';
+import Refunds from './pages/Company Admin/Refunds';
 
 
 
@@ -59,6 +60,7 @@ export default function App() {
           <Route path="/statement" element={<ProtectedPage><AgentStatement /></ProtectedPage>} />
           <Route path="/dashboard/payouts" element={<ProtectedPage><PayoutsRun /></ProtectedPage>} />
           <Route path="/dashboard/teams" element={<ProtectedPage><Teams /></ProtectedPage>} />
+          <Route path="/dashboard/refunds" element={<ProtectedPage><Refunds /></ProtectedPage>} />
 
 
 
