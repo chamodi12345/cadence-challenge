@@ -1,5 +1,5 @@
 // src/pages/Company Admin/CompanyAdminDashboard.tsx
-import { Users, UploadCloud, SlidersHorizontal, Wallet, ShieldCheck } from 'lucide-react';
+import { Users, UploadCloud, SlidersHorizontal, Wallet, ShieldCheck, RotateCcw } from 'lucide-react';
 import { DashboardCard } from '../../components/DashboardCard';
 
 export default function CompanyAdminDashboard() {
@@ -48,6 +48,13 @@ export default function CompanyAdminDashboard() {
             to="/dashboard/payouts"
             icon={Wallet}
             accent="emerald"
+          />
+          <DashboardCard
+            title="Refunds"
+            description="Record refunds and track clawbacks on payouts."
+            to="/dashboard/refunds"
+            icon={RotateCcw}
+            accent="amber"
           />
         </div>
       </div>

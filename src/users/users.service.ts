@@ -35,6 +35,20 @@ export async function createUser(companyId: string, input: CreateUserInput) {
       throw new HttpError(404, `No agent with code ${input.agentCode} exists in this company`);
     }
     agentId = agentLookup.rows[0].id;
+
+    // One login per agent: an agent is a single person (own bookings and
+    // statement), so attaching a second login to the same agent record is a
+    // data-entry mistake, not a legitimate access pattern.
+    const existingLogin = await pool.query(
+      `SELECT id FROM users WHERE agent_id = $1`,
+      [agentId]
+    );
+    if (existingLogin.rows[0]) {
+      throw new HttpError(
+        409,
+        `Agent ${input.agentCode} already has a login. Remove that login first or pick a different agent.`
+      );
+    }
   }
 
   // No email/SMTP integration yet, so we generate a temp password and

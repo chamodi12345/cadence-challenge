@@ -25,11 +25,23 @@ Update this as you merge each PR, not at the end of the week.
 - Concurrency safety tests (S2): exactly one of two simultaneous finalise
   requests wins; concurrent generate calls produce one run and distinct
   run numbers
+- Refund management: `refunds` table (migration in `scripts/migrate-refunds.ts`,
+  also in `db/schema.sql` for fresh installs) and a `POST/GET /refunds` API
+  (`src/refunds/`) — one refund per booking, with server-side checks that the
+  booking exists and is company-scoped, the amount does not exceed the original
+  booking amount, and the refund date is not before the booking date
+- Refund clawback against finalised runs: a refund recorded *after* a run was
+  finalised is recovered as a deduction on the next run (see `ADR-0002-refunds`),
+  each refund is clawed back exactly once (`settled_run_id`)
 - Legacy defect hunt: `DEFECTS.md` with three defects (including a
   tenant-isolation/security one) and their regression tests
 - Starter kit scaffold: PostgreSQL container, seed data, legacy reporting module
 
 ### Changed
+
+- `finalizePayoutRun` now stamps `finalised_at`, and `generatePayoutRun`
+  excludes refunded bookings from a period's commission so a refunded booking
+  is never paid out by a run generated after the refund
 
 ### Fixed
 
